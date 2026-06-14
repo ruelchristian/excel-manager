@@ -1214,32 +1214,47 @@ async function generateMonthlySheet() {
         
         await context.sync();
 
-        // Apply background color-coding based on status (same as master list soft pastel colors)
+        // Apply background color-coding based on status (same as master list soft pastel colors) using Conditional Formatting
         var colorNew = '#e8f0fe';        // Soft Blue (PENDING)
         var colorRenewal = '#f3e8ff';    // Soft Purple (RENEWED)
         var colorComplete = '#e6f4ea';   // Soft Green (DONE)
         var colorCancelled = '#fce8e6';  // Soft Red (CANCELLED)
 
-        for (var r = 0; r < rowsToWrite.length; r++) {
-          var rowNum = 7 + r;
-          var status = rowsToWrite[r][6]; // STATUS
-          
-          var rowRange = targetSheet.getRange("B" + rowNum + ":H" + rowNum);
-          var rowColor = '#ffffff'; // default white
-          
-          if (status === "PENDING") {
-            rowColor = colorNew;
-          } else if (status === "RENEWED") {
-            rowColor = colorRenewal;
-          } else if (status === "DONE") {
-            rowColor = colorComplete;
-          } else if (status === "CANCELLED") {
-            rowColor = colorCancelled;
+        // 1. Add Data Validation (Dropdown) to the Status column (Column H)
+        var statusColRange = targetSheet.getRange("H7:H" + (6 + rowsToWrite.length));
+        statusColRange.dataValidation.rule = {
+          list: {
+            inCellDropDown: true,
+            source: "PENDING, RENEWED, DONE, CANCELLED"
           }
-          
-          rowRange.format.fill.color = rowColor;
-          rowRange.format.font.color = "#000000"; // Clean black text on pastel background
-        }
+        };
+
+        // 2. Add Conditional Formatting for the entire data range (B7:H(6 + rowsToWrite.length))
+        var fullDataRange = targetSheet.getRange("B7:H" + (6 + rowsToWrite.length));
+
+        // PENDING Rule
+        var formatPending = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        formatPending.custom.rule.formula = '=$H7="PENDING"';
+        formatPending.custom.format.fill.color = colorNew;
+        formatPending.custom.format.font.color = "#000000";
+
+        // RENEWED Rule
+        var formatRenewed = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        formatRenewed.custom.rule.formula = '=$H7="RENEWED"';
+        formatRenewed.custom.format.fill.color = colorRenewal;
+        formatRenewed.custom.format.font.color = "#000000";
+
+        // DONE Rule
+        var formatDone = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        formatDone.custom.rule.formula = '=$H7="DONE"';
+        formatDone.custom.format.fill.color = colorComplete;
+        formatDone.custom.format.font.color = "#000000";
+
+        // CANCELLED Rule
+        var formatCancelled = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        formatCancelled.custom.rule.formula = '=$H7="CANCELLED"';
+        formatCancelled.custom.format.fill.color = colorCancelled;
+        formatCancelled.custom.format.font.color = "#000000";
         
         // Auto-fit columns B to H to prevent text truncation and ensure they are wide enough
         targetSheet.getRange("B:H").format.autofitColumns();
