@@ -522,6 +522,38 @@ async function sortSubscriptions() {
 
       var values = range.values;
 
+      // Clean up and standardize statuses in memory for Annual Master
+      if (currentListType === 'annual') {
+        for (var i = 0; i < values.length; i++) {
+          var rawStatus = String(values[i][0] || '').trim();
+          var statusLower = rawStatus.toLowerCase();
+          
+          var hasData = false;
+          for (var col = 1; col < 6; col++) {
+            if (values[i][col] !== null && String(values[i][col]).trim() !== "") {
+              hasData = true;
+              break;
+            }
+          }
+          
+          if (hasData) {
+            if (statusLower === "" || statusLower === "none" || statusLower === "null" || statusLower === "undefined") {
+              values[i][0] = "Active";
+            } else if (statusLower === "complete license" || statusLower.indexOf("complete") !== -1) {
+              values[i][0] = "Complete";
+            } else if (statusLower.indexOf("cancel") !== -1) {
+              values[i][0] = "Cancelled";
+            } else {
+              if (rawStatus) {
+                values[i][0] = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+              }
+            }
+          } else {
+            values[i][0] = "";
+          }
+        }
+      }
+
       var statusWeights = {
         'new': 1,
         'renewal': 2,
@@ -654,30 +686,12 @@ async function formatSheetColorsDirect(sheet, values) {
   await sheet.context.sync();
 }
 
-// Trigger row formatting manually
+// Trigger row formatting manually (now standardizes, sorts, and colors the sheet)
 async function runFormatter() {
   document.getElementById('loader').style.display = 'block';
   try {
-    await Excel.run(async function (context) {
-      var sheetName = currentListType === 'monthly' ? "ADB MASTER LIST MONTHLY" : "ADB MASTER LIST ANNUAL";
-      var sheet = context.workbook.worksheets.getItem(sheetName);
-      var rangeUsed = sheet.getUsedRange();
-      var lastRowRange = rangeUsed.getLastRow();
-      lastRowRange.load("rowIndex");
-      await context.sync();
-
-      var lastRowIndex = lastRowRange.rowIndex + 1;
-      var startRow = currentListType === 'monthly' ? 4 : 5;
-      if (lastRowIndex < startRow) return;
-
-      var colLetter = currentListType === 'monthly' ? "L" : "F";
-      var range = sheet.getRange("A" + startRow + ":" + colLetter + lastRowIndex);
-      range.load("values");
-      await context.sync();
-
-      await formatSheetColorsDirect(sheet, range.values);
-    });
-    loadSubscriptions();
+    await sortSubscriptions();
+    await loadSubscriptions();
   } catch (err) {
     showError("Formatting failed: " + err.message);
   }
