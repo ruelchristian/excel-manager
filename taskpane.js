@@ -1036,9 +1036,12 @@ async function generateMonthlySheet() {
         await context.sync();
       }
 
-      // Always write/verify headers in row 6 (B6:H6) to support the OLD PO / NEW PO layout
-      targetSheet.getRange("B6:H6").values = [["LICENSE", "QTY", "DATE", "SUBSRIPTION", "OLD PO NUMBER", "NEW PO NUMBER", "STATUS"]];
-      targetSheet.getRange("B6:H6").format.font.bold = true;
+      // Always write/verify headers in row 6 (B6:H6) to support the OLD PO / NEW PO layout and style/color them beautifully
+      var headerRange = targetSheet.getRange("B6:H6");
+      headerRange.values = [["LICENSE", "QTY", "DATE", "SUBSRIPTION", "OLD PO NUMBER", "NEW PO NUMBER", "STATUS"]];
+      headerRange.format.font.bold = true;
+      headerRange.format.font.color = "#FFFFFF"; // White text
+      headerRange.format.fill.color = "#4472C4"; // Medium blue accent color
       await context.sync();
 
       if (targetExists) {
@@ -1201,42 +1204,35 @@ async function generateMonthlySheet() {
         
         await context.sync();
 
-        // Apply background color-coding based on status
+        // Apply background color-coding based on status (same as master list soft pastel colors)
+        var colorNew = '#e8f0fe';        // Soft Blue (PENDING)
+        var colorRenewal = '#f3e8ff';    // Soft Purple (RENEWED)
+        var colorComplete = '#e6f4ea';   // Soft Green (DONE)
+        var colorCancelled = '#fce8e6';  // Soft Red (CANCELLED)
+
         for (var r = 0; r < rowsToWrite.length; r++) {
           var rowNum = 7 + r;
           var status = rowsToWrite[r][6]; // STATUS
           
-          var rangeBE = targetSheet.getRange("B" + rowNum + ":E" + rowNum);
-          var rangeFG = targetSheet.getRange("F" + rowNum + ":G" + rowNum);
-          var rangeH = targetSheet.getRange("H" + rowNum);
+          var rowRange = targetSheet.getRange("B" + rowNum + ":H" + rowNum);
+          var rowColor = '#ffffff'; // default white
           
-          if (status === "DONE") {
-            var rangeEntire = targetSheet.getRange("B" + rowNum + ":H" + rowNum);
-            rangeEntire.format.fill.color = "#FF0000"; // Solid Red
-            rangeEntire.format.font.color = "#FFFFFF"; // White text
+          if (status === "PENDING") {
+            rowColor = colorNew;
+          } else if (status === "RENEWED") {
+            rowColor = colorRenewal;
+          } else if (status === "DONE") {
+            rowColor = colorComplete;
           } else if (status === "CANCELLED") {
-            var rangeEntire = targetSheet.getRange("B" + rowNum + ":H" + rowNum);
-            rangeEntire.format.fill.color = "#D9D9D9"; // Solid Gray
-            rangeEntire.format.font.color = "#595959"; // Dark Gray text
-          } else {
-            // RENEWED or PENDING
-            rangeBE.format.fill.color = "#E2EFDA"; // Light Green Theme 9 Tint 0.8
-            rangeBE.format.font.color = "#000000";
-            rangeFG.format.fill.clear(); // No fill
-            rangeFG.format.font.color = "#000000";
-            
-            if (status === "PENDING") {
-              rangeH.format.fill.color = "#FFFF00"; // Yellow
-              rangeH.format.font.color = "#000000";
-            } else if (status === "RENEWED") {
-              rangeH.format.fill.color = "#E2EFDA"; // Light Green
-              rangeH.format.font.color = "#000000";
-            } else {
-              rangeH.format.fill.clear();
-              rangeH.format.font.color = "#000000";
-            }
+            rowColor = colorCancelled;
           }
+          
+          rowRange.format.fill.color = rowColor;
+          rowRange.format.font.color = "#000000"; // Clean black text on pastel background
         }
+        
+        // Auto-fit columns B to H to prevent text truncation and ensure they are wide enough
+        targetSheet.getRange("B:H").format.autofitColumns();
         await context.sync();
       }
 
