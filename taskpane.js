@@ -5,8 +5,20 @@ var currentPage = 1;
 var itemsPerPage = 10;
 var currentListType = "monthly"; // 'monthly' or 'annual'
 
+var startPicker, endPicker;
+
 // Initialize Office.js
 Office.onReady(function (info) {
+  // Initialize Flatpickr date pickers
+  startPicker = flatpickr("#form-start-date", {
+    dateFormat: "Y-m-d",
+    allowInput: true
+  });
+  endPicker = flatpickr("#form-end-date", {
+    dateFormat: "Y-m-d",
+    allowInput: true
+  });
+
   if (info.host === Office.HostType.Excel) {
     document.getElementById('loader').innerText = "Loading subscriptions from Excel...";
     loadSubscriptions();
@@ -360,8 +372,12 @@ function editRecord(rec) {
     document.getElementById('form-fa-so').value = rec.fa_so;
   }
 
-  document.getElementById('form-start-date').value = rec.startDate;
-  document.getElementById('form-end-date').value = rec.endDate;
+  if (startPicker) startPicker.setDate(rec.startDate);
+  else document.getElementById('form-start-date').value = rec.startDate;
+
+  if (endPicker) endPicker.setDate(rec.endDate);
+  else document.getElementById('form-end-date').value = rec.endDate;
+
   document.getElementById('form-status').value = rec.status ? rec.status : 'Complete';
 
   document.getElementById('save-btn').innerText = 'Update (Row ' + rec.rowNum + ')';
@@ -373,6 +389,8 @@ function editRecord(rec) {
 // Reset Form
 function resetForm() {
   document.getElementById('record-form').reset();
+  if (startPicker) startPicker.clear();
+  if (endPicker) endPicker.clear();
   document.getElementById('form-row-num').value = '';
   document.getElementById('save-btn').innerText = 'Save Subscription';
   document.getElementById('cancel-edit').style.display = 'none';
