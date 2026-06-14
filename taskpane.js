@@ -1132,12 +1132,6 @@ async function generateMonthlySheet() {
         var key = (rec.license + "|" + normDate).toLowerCase();
         
         var qty = "1 Licenses";
-        // Default PO Number is SO number (if present) or FA number
-        var poNum = rec.so ? rec.so : (rec.fa ? rec.fa : "");
-        
-        if (rec.status.toLowerCase() === 'renewal' && poNum && !poNum.toLowerCase().includes('renewal')) {
-          poNum += " renewal";
-        }
 
         // Map status
         var statusMapped = "DONE";
@@ -1167,11 +1161,6 @@ async function generateMonthlySheet() {
           if (prevPOMap[carryOverKey]) {
             oldPo = prevPOMap[carryOverKey];
           }
-        }
-
-        // Fall back to default if oldPo is still empty
-        if (!oldPo) {
-          oldPo = poNum;
         }
 
         // If exists in old sheet, preserve manual entries
