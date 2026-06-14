@@ -41,6 +41,23 @@ function switchTab(tabName) {
     document.getElementById('tab-btn-form').classList.add('active');
     document.getElementById('tab-form').classList.add('active');
     
+    // Dynamically update status choices
+    var statusSelect = document.getElementById('form-status');
+    var currentVal = statusSelect.value;
+    if (currentListType === 'monthly') {
+      statusSelect.innerHTML = 
+        '<option value="New">New</option>' +
+        '<option value="Renewal">Renewal</option>' +
+        '<option value="Complete">Complete</option>' +
+        '<option value="Cancelled">Cancelled</option>';
+    } else {
+      statusSelect.innerHTML = 
+        '<option value="Active">Active</option>' +
+        '<option value="Complete">Complete</option>' +
+        '<option value="Cancelled">Cancelled</option>';
+    }
+    if (currentVal) statusSelect.value = currentVal;
+    
     // Toggle form field groups based on type
     if (currentListType === 'monthly') {
       document.getElementById('monthly-fields-group1').style.display = 'flex';
@@ -210,10 +227,10 @@ function renderList(records) {
     var statusLabel = rec.status ? rec.status : 'Complete';
     var statusLower = rec.status.toLowerCase();
 
-    if (statusLower === 'new') {
+    if (statusLower === 'new' || statusLower === 'active') {
       cardClass = 'status-new';
       badgeClass = 'badge-new';
-      statusLabel = 'NEW';
+      statusLabel = statusLower === 'new' ? 'NEW' : 'ACTIVE';
     } else if (statusLower === 'renewal') {
       cardClass = 'status-renewal';
       badgeClass = 'badge-renewal';
@@ -490,8 +507,9 @@ async function sortSubscriptions() {
       var statusWeights = {
         'new': 1,
         'renewal': 2,
-        'complete': 3,
-        'cancelled': 4
+        'active': 1,
+        'complete': currentListType === 'monthly' ? 3 : 2,
+        'cancelled': currentListType === 'monthly' ? 4 : 3
       };
 
       var monthOrder = {
@@ -608,7 +626,7 @@ async function formatSheetColorsDirect(sheet, values) {
       
     var rowColor = colorDefault;
 
-    if (status === 'new') {
+    if (status === 'new' || status === 'active') {
       rowColor = colorNew;
     } else if (status === 'renewal') {
       rowColor = colorRenewal;

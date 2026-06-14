@@ -128,10 +128,9 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   let values = range.getValues();
   
   let statusWeights: { [key: string]: number } = {
-    'new': 1,
-    'renewal': 2,
-    'complete': 3,
-    'cancelled': 4
+    'active': 1,
+    'complete': 2,
+    'cancelled': 3
   };
   
   let getTime = function(val: string | number | boolean) {
@@ -146,8 +145,8 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     // 1. Status (Index 0)
     let statusA = String(a[0] || '').trim().toLowerCase();
     let statusB = String(b[0] || '').trim().toLowerCase();
-    let weightStatusA = statusWeights[statusA] || 5;
-    let weightStatusB = statusWeights[statusB] || 5;
+    let weightStatusA = statusWeights[statusA] || 4;
+    let weightStatusB = statusWeights[statusB] || 4;
     if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
     
     // 2. Start Date (Index 1) - Descending
@@ -167,24 +166,20 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   
   range.setValues(values);
   
-  let colorNew = '#e8f0fe';
-  let colorRenewal = '#f3e8ff';
-  let colorComplete = '#e6f4ea';
-  let colorCancelled = '#fce8e6';
+  let colorActive = '#e8f0fe';       // Soft Blue
+  let colorComplete = '#e6f4ea';     // Soft Green
+  let colorCancelled = '#fce8e6';    // Soft Red
   let colorDefault = '#ffffff';
   
   for (let i = 0; i < values.length; i++) {
     let status = String(values[i][0] || '').trim().toLowerCase();
     let rowColor = colorDefault;
     
-    if (status === 'new') {
-      rowColor = colorNew;
-    } else if (status === 'renewal') {
-      rowColor = colorRenewal;
+    if (status === 'active' || status.indexOf('active') !== -1) {
+      rowColor = colorActive;
     } else if (status === 'complete' || status.indexOf('complete') !== -1) {
       rowColor = colorComplete;
     } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
-      rowColor = colorDefault; // wait, let's use colorCancelled
       rowColor = colorCancelled;
     }
     
