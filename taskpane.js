@@ -698,10 +698,32 @@ async function runFormatter() {
 }
 
 function showError(msg) {
-  var errBox = document.getElementById('error-box');
-  errBox.innerText = msg;
-  errBox.style.display = 'block';
-  document.getElementById('loader').style.display = 'none';
+  showMessage(msg, true);
+}
+
+function showSuccess(msg) {
+  showMessage(msg, false);
+}
+
+function showMessage(msg, isError) {
+  var box = document.getElementById('error-box');
+  if (box) {
+    box.innerText = msg;
+    box.style.display = 'block';
+    if (isError) {
+      box.style.backgroundColor = '#fef2f2';
+      box.style.color = '#b91c1c';
+      box.style.border = '1px solid rgba(239, 68, 68, 0.15)';
+    } else {
+      box.style.backgroundColor = '#ecfdf5';
+      box.style.color = '#047857';
+      box.style.border = '1px solid rgba(16, 185, 129, 0.15)';
+    }
+  }
+  var loader = document.getElementById('loader');
+  if (loader) {
+    loader.style.display = 'none';
+  }
 }
 
 // =========================================================================
@@ -784,7 +806,7 @@ async function generateMonthlySheet() {
   var selectedMonth = document.getElementById('gen-month').value;
   var selectedYear = parseInt(document.getElementById('gen-year').value, 10);
   if (!selectedYear) {
-    alert("Please enter a valid year.");
+    showError("Please enter a valid year.");
     return;
   }
 
@@ -799,6 +821,97 @@ async function generateMonthlySheet() {
       var targetSheetName = "ADB_" + monthUpper;
       if (selectedYear !== 2025) {
         targetSheetName = "ADB_" + monthUpper + " " + selectedYear;
+      }
+
+      // 1b. Fetch PO numbers from the previous month's sheet
+      var months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+      var currentMonthIndex = months.findIndex(m => m.toLowerCase() === selectedMonth.toLowerCase());
+      var prevMonthIndex = currentMonthIndex - 1;
+      var prevYear = selectedYear;
+      if (prevMonthIndex < 0) {
+        prevMonthIndex = 11;
+        prevYear = selectedYear - 1;
+      }
+      var prevMonthName = months[prevMonthIndex];
+      var prevSheetName = "ADB_" + prevMonthName.toUpperCase();
+      if (prevYear !== 2025) {
+        prevSheetName = "ADB_" + prevMonthName.toUpperCase() + " " + prevYear;
+      }
+
+      var prevSheet = context.workbook.worksheets.getItemOrNullObject(prevSheetName);
+      prevSheet.load("nullObject");
+      await context.sync();
+
+      var prevPOMap = {};
+      if (!prevSheet.isNullObject) {
+        // Load headers first to see how many columns we have and what their names are
+        var headerRange = prevSheet.getRange("B6:H6");
+        headerRange.load("values");
+        await context.sync();
+
+        var headers = headerRange.values[0];
+        var idxLicense = -1;
+        var idxDate = -1;
+        var idxOldPo = -1;
+        var idxNewPo = -1;
+        var idxPo = -1;
+
+        for (var i = 0; i < headers.length; i++) {
+          var h = String(headers[i] || '').trim().toUpperCase();
+          if (h === "LICENSE") idxLicense = i;
+          else if (h === "DATE") idxDate = i;
+          else if (h === "OLD PO NUMBER") idxOldPo = i;
+          else if (h === "NEW PO NUMBER") idxNewPo = i;
+          else if (h === "PO NUMBER") idxPo = i;
+        }
+
+        if (idxLicense !== -1 && idxDate !== -1) {
+          var prevRangeUsed = prevSheet.getUsedRange();
+          var prevLastRowRange = prevRangeUsed.getLastRow();
+          prevLastRowRange.load("rowIndex");
+          await context.sync();
+
+          var prevLastRow = prevLastRowRange.rowIndex + 1;
+          if (prevLastRow >= 7) {
+            var prevRange = prevSheet.getRange("B7:H" + prevLastRow);
+            prevRange.load("values");
+            await context.sync();
+
+            var prevValues = prevRange.values;
+            for (var i = 0; i < prevValues.length; i++) {
+              var row = prevValues[i];
+              var lName = String(row[idxLicense] || '').trim();
+              var dVal = String(row[idxDate] || '').trim();
+              
+              var oldPoVal = idxOldPo !== -1 ? String(row[idxOldPo] || '').trim() : "";
+              var newPoVal = idxNewPo !== -1 ? String(row[idxNewPo] || '').trim() : "";
+              var poVal = idxPo !== -1 ? String(row[idxPo] || '').trim() : "";
+
+              var inheritedPo = newPoVal || oldPoVal || poVal;
+
+              if (lName && dVal) {
+                var day = null;
+                var dateMatch = dVal.match(/Expires on \d+\/(\d+)\/\d+/);
+                if (dateMatch) {
+                  day = parseInt(dateMatch[1], 10);
+                } else {
+                  var cleanDate = dVal.replace("Expires on ", "").trim();
+                  var parts = cleanDate.split("/");
+                  if (parts.length >= 2) {
+                    day = parseInt(parts[1], 10);
+                  }
+                }
+
+                if (day !== null && !isNaN(day)) {
+                  var key = lName.toLowerCase() + "|" + day;
+                  if (inheritedPo) {
+                    prevPOMap[key] = inheritedPo;
+                  }
+                }
+              }
+            }
+          }
+        }
       }
 
       // 2. Fetch all Monthly Master subscriptions
@@ -921,36 +1034,72 @@ async function generateMonthlySheet() {
       if (!targetExists) {
         targetSheet = context.workbook.worksheets.add(targetSheetName);
         await context.sync();
-        
-        // Setup headers in row 6
-        targetSheet.getRange("B6:G6").values = [["LICENSE", "QTY", "DATE", "SUBSRIPTION", "PO NUMBER", "STATUS"]];
-        targetSheet.getRange("B6:G6").format.font.bold = true;
-        await context.sync();
-      } else {
-        // Read existing sheet rows (B7:G250) to preserve manually typed PO Numbers & Quantities
-        var tRangeUsed = targetSheet.getUsedRange();
-        var tLastRowRange = tRangeUsed.getLastRow();
-        tLastRowRange.load("rowIndex");
+      }
+
+      // Always write/verify headers in row 6 (B6:H6) to support the OLD PO / NEW PO layout
+      targetSheet.getRange("B6:H6").values = [["LICENSE", "QTY", "DATE", "SUBSRIPTION", "OLD PO NUMBER", "NEW PO NUMBER", "STATUS"]];
+      targetSheet.getRange("B6:H6").format.font.bold = true;
+      await context.sync();
+
+      if (targetExists) {
+        // Read existing headers dynamically to handle older/newer columns safely
+        var tHeaderRange = targetSheet.getRange("B6:H6");
+        tHeaderRange.load("values");
         await context.sync();
 
-        var tLastRow = tLastRowRange.rowIndex + 1;
-        if (tLastRow >= 7) {
-          var tRange = targetSheet.getRange("B7:G" + tLastRow);
-          tRange.load("values");
+        var tHeaders = tHeaderRange.values[0];
+        var tIdxLicense = -1;
+        var tIdxQty = -1;
+        var tIdxDate = -1;
+        var tIdxOldPo = -1;
+        var tIdxNewPo = -1;
+        var tIdxPo = -1;
+        var tIdxStatus = -1;
+
+        for (var i = 0; i < tHeaders.length; i++) {
+          var h = String(tHeaders[i] || '').trim().toUpperCase();
+          if (h === "LICENSE") tIdxLicense = i;
+          else if (h === "QTY") tIdxQty = i;
+          else if (h === "DATE") tIdxDate = i;
+          else if (h === "OLD PO NUMBER") tIdxOldPo = i;
+          else if (h === "NEW PO NUMBER") tIdxNewPo = i;
+          else if (h === "PO NUMBER") tIdxPo = i;
+          else if (h === "STATUS") tIdxStatus = i;
+        }
+
+        if (tIdxLicense !== -1 && tIdxDate !== -1) {
+          var tRangeUsed = targetSheet.getUsedRange();
+          var tLastRowRange = tRangeUsed.getLastRow();
+          tLastRowRange.load("rowIndex");
           await context.sync();
-          
-          var tValues = tRange.values;
-          for (var i = 0; i < tValues.length; i++) {
-            var row = tValues[i];
-            var lName = String(row[0] || '').trim();
-            var dVal = String(row[2] || '').trim();
-            if (lName) {
-              var key = (lName + "|" + dVal).toLowerCase();
-              existingRowsMap[key] = {
-                qty: String(row[1] || '1 Licenses').trim(),
-                po: String(row[4] || '').trim(),
-                status: String(row[5] || '').trim()
-              };
+
+          var tLastRow = tLastRowRange.rowIndex + 1;
+          if (tLastRow >= 7) {
+            var tRange = targetSheet.getRange("B7:H" + tLastRow);
+            tRange.load("values");
+            await context.sync();
+            
+            var tValues = tRange.values;
+            for (var i = 0; i < tValues.length; i++) {
+              var row = tValues[i];
+              var lName = String(row[tIdxLicense] || '').trim();
+              var dVal = String(row[tIdxDate] || '').trim();
+              if (lName) {
+                var key = (lName + "|" + dVal).toLowerCase();
+                
+                var oldPoVal = tIdxOldPo !== -1 ? String(row[tIdxOldPo] || '').trim() : "";
+                var newPoVal = tIdxNewPo !== -1 ? String(row[tIdxNewPo] || '').trim() : "";
+                var poVal = tIdxPo !== -1 ? String(row[tIdxPo] || '').trim() : "";
+                var qtyVal = tIdxQty !== -1 ? String(row[tIdxQty] || '1 Licenses').trim() : "1 Licenses";
+                var statusVal = tIdxStatus !== -1 ? String(row[tIdxStatus] || '').trim() : "";
+
+                existingRowsMap[key] = {
+                  qty: qtyVal,
+                  oldPo: oldPoVal || poVal,
+                  newPo: newPoVal,
+                  status: statusVal
+                };
+              }
             }
           }
         }
@@ -983,10 +1132,36 @@ async function generateMonthlySheet() {
           statusMapped = "CANCELLED";
         }
 
+        // Initialize variables for oldPo and newPo
+        var oldPo = "";
+        var newPo = "";
+
+        // First, check if carried over from previous month
+        var dateObj = null;
+        if (typeof rec.endDate === 'number') {
+          dateObj = new Date(Math.round((rec.endDate - 25569) * 86400 * 1000));
+        } else {
+          dateObj = new Date(rec.endDate);
+        }
+        var day = dateObj && !isNaN(dateObj.getTime()) ? dateObj.getDate() : null;
+        if (day !== null) {
+          var carryOverKey = rec.license.toLowerCase() + "|" + day;
+          if (prevPOMap[carryOverKey]) {
+            oldPo = prevPOMap[carryOverKey];
+          }
+        }
+
+        // Fall back to default if oldPo is still empty
+        if (!oldPo) {
+          oldPo = poNum;
+        }
+
         // If exists in old sheet, preserve manual entries
         if (existingRowsMap[key]) {
           qty = existingRowsMap[key].qty;
-          if (existingRowsMap[key].po) poNum = existingRowsMap[key].po;
+          oldPo = existingRowsMap[key].oldPo || oldPo;
+          newPo = existingRowsMap[key].newPo || newPo;
+          statusMapped = existingRowsMap[key].status || statusMapped;
         }
 
         rowsToWrite.push([
@@ -994,21 +1169,20 @@ async function generateMonthlySheet() {
           qty,
           dateStr,
           rec.billing,
-          poNum,
+          oldPo,
+          newPo,
           statusMapped
         ]);
       }
 
-      // 7. Clear rows below header (B7:G250)
-      if (targetExists) {
-        var rangeToClear = targetSheet.getRange("B7:G250");
-        rangeToClear.clear();
-        await context.sync();
-      }
+      // 7. Clear rows below header (B7:H1000)
+      var rangeToClear = targetSheet.getRange("B7:H1000");
+      rangeToClear.clear();
+      await context.sync();
 
       // 8. Write new rows starting at row 7
       if (rowsToWrite.length > 0) {
-        var writeRange = targetSheet.getRange("B7:G" + (6 + rowsToWrite.length));
+        var writeRange = targetSheet.getRange("B7:H" + (6 + rowsToWrite.length));
         writeRange.values = rowsToWrite;
         
         // Add thin gray borders
@@ -1026,13 +1200,51 @@ async function generateMonthlySheet() {
         writeRange.format.borders.getItem('InsideVertical').color = '#e2e8f0';
         
         await context.sync();
+
+        // Apply background color-coding based on status
+        for (var r = 0; r < rowsToWrite.length; r++) {
+          var rowNum = 7 + r;
+          var status = rowsToWrite[r][6]; // STATUS
+          
+          var rangeBE = targetSheet.getRange("B" + rowNum + ":E" + rowNum);
+          var rangeFG = targetSheet.getRange("F" + rowNum + ":G" + rowNum);
+          var rangeH = targetSheet.getRange("H" + rowNum);
+          
+          if (status === "DONE") {
+            var rangeEntire = targetSheet.getRange("B" + rowNum + ":H" + rowNum);
+            rangeEntire.format.fill.color = "#FF0000"; // Solid Red
+            rangeEntire.format.font.color = "#FFFFFF"; // White text
+          } else if (status === "CANCELLED") {
+            var rangeEntire = targetSheet.getRange("B" + rowNum + ":H" + rowNum);
+            rangeEntire.format.fill.color = "#D9D9D9"; // Solid Gray
+            rangeEntire.format.font.color = "#595959"; // Dark Gray text
+          } else {
+            // RENEWED or PENDING
+            rangeBE.format.fill.color = "#E2EFDA"; // Light Green Theme 9 Tint 0.8
+            rangeBE.format.font.color = "#000000";
+            rangeFG.format.fill.clear(); // No fill
+            rangeFG.format.font.color = "#000000";
+            
+            if (status === "PENDING") {
+              rangeH.format.fill.color = "#FFFF00"; // Yellow
+              rangeH.format.font.color = "#000000";
+            } else if (status === "RENEWED") {
+              rangeH.format.fill.color = "#E2EFDA"; // Light Green
+              rangeH.format.font.color = "#000000";
+            } else {
+              rangeH.format.fill.clear();
+              rangeH.format.font.color = "#000000";
+            }
+          }
+        }
+        await context.sync();
       }
 
       targetSheet.activate();
       await context.sync();
 
       document.getElementById('loader').style.display = 'none';
-      alert("Sheet '" + targetSheetName + "' generated/updated successfully with " + rowsToWrite.length + " active subscriptions!");
+      showSuccess("Sheet '" + targetSheetName + "' generated/updated successfully with " + rowsToWrite.length + " active subscriptions!");
       loadSubscriptions();
     });
   } catch (err) {
