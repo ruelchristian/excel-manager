@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <title>ADB Subscription Manager</title>
+  <!-- Include Outfit Font from Google Fonts for a premium look -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Load Office.js library -->
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js" type="text/javascript"></script>
+  
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #64748b;
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --border: #e2e8f0;
+      
+      --color-green: #10b981;
+      --color-green-light: #e6f4ea;
+      --color-orange: #f59e0b;
+      --color-orange-light: #fef7e0;
+      --color-red: #ef4444;
+      --color-red-light: #fce8e6;
+      --color-blue: #3b82f6;
+      --color-blue-light: #e8f0fe;
+      --color-purple: #a855f7;
+      --color-purple-light: #f3e8ff;
+      --color-gray: #94a3b8;
+      --color-gray-light: #f1f5f9;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      margin: 0;
+      padding: 15px;
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      font-size: 13px;
+    }
+
+    h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-weight: 600;
+      color: var(--primary);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 8px;
+      font-size: 16px;
+    }
+
+    /* Tabs Navigation */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 15px;
+    }
+
+    .tab {
+      flex: 1;
+      text-align: center;
+      padding: 10px 0;
+      font-weight: 500;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      font-size: 14px;
+    }
+
+    .tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: var(--text-main);
+      font-size: 12px;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background-color: var(--bg-card);
+      color: var(--text-main);
+      font-family: 'Outfit', sans-serif;
+      box-sizing: border-box;
+      font-size: 12px;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    /* Flex Grid layouts */
+    .row-split {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .row-split .form-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .three-column-split {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 6px;
+    }
+
+    .three-column-split .form-group {
+      flex: 1;
+      min-width: 0;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      transition: all 0.2s ease;
+      font-size: 13px;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background-color: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      margin-top: 8px;
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border);
+      color: var(--text-main);
+    }
+
+    /* Search & List Styles */
+    .search-container {
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .card-list {
+      max-height: 480px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+    }
+
+    /* Card coloring based on Status */
+    .card.status-completed {
+      border-left: 4px solid var(--color-green);
+      background-color: var(--color-green-light);
+    }
+
+    .card.status-new {
+      border-left: 4px solid var(--color-blue);
+      background-color: var(--color-blue-light);
+    }
+
+    .card.status-renewal {
+      border-left: 4px solid var(--color-purple);
+      background-color: var(--color-purple-light);
+    }
+
+    .card.status-cancelled {
+      border-left: 4px solid var(--color-red);
+      background-color: var(--color-red-light);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 12px;
+    }
+
+    .card-title {
+      color: var(--text-main);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 140px;
+    }
+
+    .card-badge {
+      font-size: 9px;
+      padding: 2px 5px;
+      border-radius: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .badge-completed { background-color: var(--color-green); color: white; }
+    .badge-new { background-color: var(--color-blue); color: white; }
+    .badge-renewal { background-color: var(--color-purple); color: white; }
+    .badge-cancelled { background-color: var(--color-red); color: white; }
+
+    .card-details {
+      font-size: 11px;
+      color: var(--text-muted);
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 3px;
+      margin-top: 4px;
+    }
+
+    .card-footer {
+      font-size: 10px;
+      margin-top: 8px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      padding-top: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .error-msg {
+      background-color: var(--color-red-light);
+      color: var(--color-red);
+      padding: 8px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 11px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <h3>
+    <span>ADB Subscription Manager</span>
+    <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">Total: <span id="row-count">0</span></span>
+  </h3>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('list')">View & Search</div>
+    <div class="tab" onclick="switchTab('form')">Add/Edit Form</div>
+  </div>
+
+  <div class="error-msg" id="error-box"></div>
+
+  <!-- LIST TAB -->
+  <div id="tab-list" class="tab-content active">
+    <div class="search-container">
+      <input type="text" id="search-input" placeholder="Search by EU, SO, Product, or Sub ID..." onkeyup="filterList()">
+    </div>
+    <div id="loader" class="loading">Initializing Excel connection...</div>
+    <div class="card-list" id="subscription-container"></div>
+    <button class="btn-secondary" onclick="runFormatter()" style="margin-top: 12px;">Re-Format Sheet Colors</button>
+  </div>
+
+  <!-- FORM TAB -->
+  <div id="tab-form" class="tab-content">
+    <form id="record-form" onsubmit="saveRecord(event)">
+      <input type="hidden" id="form-row-num">
+
+      <!-- Row: EU and Product -->
+      <div class="row-split">
+        <div class="form-group">
+          <label for="form-eu">End User (EU Name)</label>
+          <input type="text" id="form-eu" required placeholder="e.g. Maria Juana Dimayuga">
+        </div>
+        <div class="form-group">
+          <label for="form-subscription">Subscription Product</label>
+          <select id="form-subscription" required>
+            <option value="">-- Select Product --</option>
+            <option value="Microsoft 365 E3">Microsoft 365 E3</option>
+            <option value="Microsoft 365 E3 (no Teams)">Microsoft 365 E3 (no Teams)</option>
+            <option value="Microsoft Teams Enterprise">Microsoft Teams Enterprise</option>
+            <option value="Microsoft Teams Phone Standard">Microsoft Teams Phone Standard</option>
+            <option value="Microsoft 365 Audio Conferencing">Microsoft 365 Audio Conferencing</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 3-Column Split: Months Left, Total Months, and Sub ID -->
+      <div class="three-column-split">
+        <div class="form-group">
+          <label for="form-months-left">Months Left</label>
+          <input type="number" id="form-months-left" min="0" placeholder="e.g. 0">
+        </div>
+        <div class="form-group">
+          <label for="form-total-months">Total Months</label>
+          <input type="number" id="form-total-months" min="1" placeholder="e.g. 1">
+        </div>
+        <div class="form-group">
+          <label for="form-sub-id">Subscription ID</label>
+          <input type="text" id="form-sub-id" placeholder="e.g. CFQ7TTC0LFLX">
+        </div>
+      </div>
+
+      <!-- 3-Column Split: Start Date, End Date, and Month -->
+      <div class="three-column-split">
+        <div class="form-group">
+          <label for="form-start-date">Start Date</label>
+          <input type="date" id="form-start-date">
+        </div>
+        <div class="form-group">
+          <label for="form-end-date">End Date</label>
+          <input type="date" id="form-end-date">
+        </div>
+        <div class="form-group">
+          <label for="form-month">Renewal Month</label>
+          <select id="form-month" required>
+            <option value="">-- Select Month --</option>
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row: FA and SO Numbers -->
+      <div class="row-split">
+        <div class="form-group">
+          <label for="form-fa">FA Number</label>
+          <input type="text" id="form-fa" placeholder="e.g. FAUNI25071210">
+        </div>
+        <div class="form-group">
+          <label for="form-so">SO Number</label>
+          <input type="text" id="form-so" placeholder="e.g. SOUNIAA79455">
+        </div>
+      </div>
+
+      <!-- Row: Status and PO Status -->
+      <div class="row-split">
+        <div class="form-group">
+          <label for="form-status">Subscription Status</label>
+          <select id="form-status" required>
+            <option value="New">New</option>
+            <option value="Renewal">Renewal</option>
+            <option value="Complete">Complete</option>
+            <option value="Cancelled">Cancelled</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="form-po-status">PO Status</label>
+          <select id="form-po-status" required>
+            <option value="PO Done">PO Done</option>
+            <option value="PO Pending">PO Pending</option>
+            <option value="N/A">N/A</option>
+          </select>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="save-btn" style="margin-top: 8px;">Save Subscription</button>
+      <button type="button" class="btn-secondary" id="cancel-edit" onclick="resetForm()" style="display: none;">Cancel Edit</button>
+    </form>
+  </div>
+
+  <!-- Load Add-in JS logic -->
+  <script src="taskpane.js" type="text/javascript"></script>
+</body>
+</html>

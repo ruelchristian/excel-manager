@@ -30,21 +30,13 @@ To run custom scripts and sidebars in Excel Cloud, the HTML and JS files must be
 Now that your files are hosted on the internet, update your local `manifest.xml` to point to them:
 
 1. Open **`manifest.xml`** in a text editor.
-2. Locate line 12:
+2. Locate line 15:
    ```xml
-   <AppDomain>https://localhost:3000</AppDomain>
+   <SourceLocation DefaultValue="https://localhost:3000/taskpane.html"/>
    ```
-   Replace it with your GitHub Pages domain:
+3. Replace it with your live HTML file link:
    ```xml
-   <AppDomain>https://YOUR_USERNAME.github.io</AppDomain>
-   ```
-3. Locate line 18:
-   ```xml
-   <SourceLocation DefaultValue="https://localhost:3000/taskpane.html" />
-   ```
-   Replace it with your live HTML file link:
-   ```xml
-   <SourceLocation DefaultValue="https://YOUR_USERNAME.github.io/excel-manager/taskpane.html" />
+   <SourceLocation DefaultValue="https://YOUR_USERNAME.github.io/excel-manager/taskpane.html"/>
    ```
 4. Save the `manifest.xml` file.
 
