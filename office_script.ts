@@ -127,6 +127,24 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   let range = sheet.getRange("A5:F" + lastRowIndex);
   let values = range.getValues();
   
+  // Clean up and standardize statuses in memory
+  for (let i = 0; i < values.length; i++) {
+    let rawStatus = String(values[i][0] || '').trim();
+    let statusLower = rawStatus.toLowerCase();
+    
+    if (statusLower === "" || statusLower === "none" || statusLower === "null" || statusLower === "undefined") {
+      values[i][0] = "Active";
+    } else if (statusLower === "complete license" || statusLower.indexOf("complete") !== -1) {
+      values[i][0] = "Complete";
+    } else if (statusLower.indexOf("cancel") !== -1) {
+      values[i][0] = "Cancelled";
+    } else {
+      if (rawStatus) {
+        values[i][0] = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+      }
+    }
+  }
+  
   let statusWeights: { [key: string]: number } = {
     'active': 1,
     'complete': 2,
