@@ -1171,6 +1171,12 @@ async function generateMonthlySheet() {
           statusMapped = existingRowsMap[key].status || statusMapped;
         }
 
+        // If status is PENDING, both OLD PO and NEW PO should be empty
+        if (statusMapped === "PENDING") {
+          oldPo = "";
+          newPo = "";
+        }
+
         rowsToWrite.push([
           rec.license,
           qty,
