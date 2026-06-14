@@ -132,16 +132,30 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     let rawStatus = String(values[i][0] || '').trim();
     let statusLower = rawStatus.toLowerCase();
     
-    if (statusLower === "" || statusLower === "none" || statusLower === "null" || statusLower === "undefined") {
-      values[i][0] = "Active";
-    } else if (statusLower === "complete license" || statusLower.indexOf("complete") !== -1) {
-      values[i][0] = "Complete";
-    } else if (statusLower.indexOf("cancel") !== -1) {
-      values[i][0] = "Cancelled";
-    } else {
-      if (rawStatus) {
-        values[i][0] = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+    // Check if the row has any actual data (Columns B to F / index 1 to 5)
+    let hasData = false;
+    for (let col = 1; col < 6; col++) {
+      if (values[i][col] !== null && String(values[i][col]).trim() !== "") {
+        hasData = true;
+        break;
       }
+    }
+    
+    if (hasData) {
+      if (statusLower === "" || statusLower === "none" || statusLower === "null" || statusLower === "undefined") {
+        values[i][0] = "Active";
+      } else if (statusLower === "complete license" || statusLower.indexOf("complete") !== -1) {
+        values[i][0] = "Complete";
+      } else if (statusLower.indexOf("cancel") !== -1) {
+        values[i][0] = "Cancelled";
+      } else {
+        if (rawStatus) {
+          values[i][0] = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+        }
+      }
+    } else {
+      // If row has no actual data, ensure status is blank so it goes to the bottom
+      values[i][0] = "";
     }
   }
   
