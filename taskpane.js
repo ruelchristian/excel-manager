@@ -726,6 +726,19 @@ function showMessage(msg, isError) {
   }
 }
 
+function normalizeDateStr(str) {
+  if (!str) return "";
+  var clean = str.replace(/expires on/i, "").trim();
+  var parts = clean.split(/[\/\-]/);
+  if (parts.length === 3) {
+    var m = parseInt(parts[0], 10);
+    var d = parseInt(parts[1], 10);
+    var y = parseInt(parts[2], 10);
+    return m + "/" + d + "/" + y;
+  }
+  return clean.toLowerCase();
+}
+
 // =========================================================================
 // PAGINATION & FILTERING HELPERS
 // =========================================================================
@@ -1088,7 +1101,8 @@ async function generateMonthlySheet() {
               var lName = String(row[tIdxLicense] || '').trim();
               var dVal = String(row[tIdxDate] || '').trim();
               if (lName) {
-                var key = (lName + "|" + dVal).toLowerCase();
+                var normDate = normalizeDateStr(dVal);
+                var key = (lName + "|" + normDate).toLowerCase();
                 
                 var oldPoVal = tIdxOldPo !== -1 ? String(row[tIdxOldPo] || '').trim() : "";
                 var newPoVal = tIdxNewPo !== -1 ? String(row[tIdxNewPo] || '').trim() : "";
@@ -1114,7 +1128,8 @@ async function generateMonthlySheet() {
         var rec = filteredActive[i];
         
         var dateStr = formatExpiryDate(rec.endDate);
-        var key = (rec.license + "|" + dateStr).toLowerCase();
+        var normDate = normalizeDateStr(dateStr);
+        var key = (rec.license + "|" + normDate).toLowerCase();
         
         var qty = "1 Licenses";
         // Default PO Number is SO number (if present) or FA number
