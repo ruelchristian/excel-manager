@@ -1,4 +1,8 @@
 var allSubscriptions = [];
+var filteredSubscriptions = [];
+var currentStatusFilter = "all";
+var currentPage = 1;
+var itemsPerPage = 10;
 
 // Initialize Office.js
 Office.onReady(function (info) {
@@ -127,7 +131,7 @@ async function loadSubscriptions() {
       allSubscriptions = records;
       document.getElementById('row-count').innerText = records.length;
       document.getElementById('loader').style.display = 'none';
-      renderList(records);
+      filterList(); // Triggers the combined filter & pagination render
     });
   } catch (err) {
     showError("Failed to load subscriptions: " + err.message);
@@ -194,17 +198,29 @@ function renderList(records) {
   });
 }
 
-// Filter cards by search input
+// Filter cards by search input and status pills
 function filterList() {
   var query = document.getElementById('search-input').value.toLowerCase();
-  var filtered = allSubscriptions.filter(function(rec) {
-    return rec.eu.toLowerCase().indexOf(query) !== -1 ||
-           rec.so.toLowerCase().indexOf(query) !== -1 ||
-           rec.subId.toLowerCase().indexOf(query) !== -1 ||
-           rec.subscription.toLowerCase().indexOf(query) !== -1 ||
-           rec.fa.toLowerCase().indexOf(query) !== -1;
+  
+  filteredSubscriptions = allSubscriptions.filter(function(rec) {
+    // 1. Status Filter check
+    var matchesStatus = true;
+    if (currentStatusFilter !== 'all') {
+      matchesStatus = rec.status.toLowerCase() === currentStatusFilter;
+    }
+    
+    // 2. Search Text check
+    var matchesSearch = rec.eu.toLowerCase().indexOf(query) !== -1 ||
+                        rec.so.toLowerCase().indexOf(query) !== -1 ||
+                        rec.subId.toLowerCase().indexOf(query) !== -1 ||
+                        rec.subscription.toLowerCase().indexOf(query) !== -1 ||
+                        rec.fa.toLowerCase().indexOf(query) !== -1;
+                        
+    return matchesStatus && matchesSearch;
   });
-  renderList(filtered);
+  
+  currentPage = 1; // Reset to page 1 when filter changes
+  renderCurrentPage();
 }
 
 // Load card details into form
@@ -372,29 +388,64 @@ async function sortSubscriptions() {
         'cancelled': 4
       };
 
-      // Custom multi-tier sort: Status -> End Date -> EU Name
+      var monthOrder = {
+        'january': 1,
+        'february': 2,
+        'march': 3,
+        'april': 4,
+        'may': 5,
+        'june': 6,
+        'july': 7,
+        'august': 8,
+        'september': 9,
+        'october': 10,
+        'november': 11,
+        'december': 12
+      };
+
+      // Custom multi-tier sort: Status -> Month (Chronological) -> Start Date (Recent to Oldest) -> EU Name
       values.sort(function(a, b) {
+        // 1. Status (Index 1)
         var statusA = String(a[1] || '').trim().toLowerCase();
         var statusB = String(b[1] || '').trim().toLowerCase();
         
-        var weightA = statusWeights[statusA] || 5;
-        var weightB = statusWeights[statusB] || 5;
+        var weightStatusA = statusWeights[statusA] || 5;
+        var weightStatusB = statusWeights[statusB] || 5;
         
-        if (weightA !== weightB) {
-          return weightA - weightB;
+        if (weightStatusA !== weightStatusB) {
+          return weightStatusA - weightStatusB;
+        }
+
+        // 2. Month (Index 0) - Recent to Oldest (December to January)
+        var monthA = String(a[0] || '').trim().toLowerCase();
+        var monthB = String(b[0] || '').trim().toLowerCase();
+        
+        var weightMonthA = monthOrder[monthA] || 13;
+        var weightMonthB = monthOrder[monthB] || 13;
+        
+        if (weightMonthA !== weightMonthB) {
+          return weightMonthA - weightMonthB;
         }
         
-        // Secondary sort: End Date (Index 6)
-        var dateA = a[6] ? new Date(a[6]).getTime() : 0;
-        var dateB = b[6] ? new Date(b[6]).getTime() : 0;
+        // Helper to convert date cell to numeric value
+        var getTime = function(val) {
+          if (typeof val === 'number') return val;
+          if (!val) return 0;
+          var parsed = new Date(val).getTime();
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        // 3. Start Date (Index 5) - Recent to Oldest (Descending)
+        var timeA = getTime(a[5]);
+        var timeB = getTime(b[5]);
         
-        if (dateA !== dateB) {
-          if (dateA === 0) return 1;
-          if (dateB === 0) return -1;
-          return dateA - dateB;
+        if (timeA !== timeB) {
+          if (timeA === 0) return 1;  // empty goes to bottom
+          if (timeB === 0) return -1; // empty goes to bottom
+          return timeB - timeA;       // descending: recent to oldest
         }
         
-        // Tertiary sort: EU Name (Index 7)
+        // 4. EU Name (Index 7)
         var nameA = String(a[7] || '').trim().toLowerCase();
         var nameB = String(b[7] || '').trim().toLowerCase();
         return nameA.localeCompare(nameB);
@@ -471,4 +522,73 @@ function showError(msg) {
   errBox.innerText = msg;
   errBox.style.display = 'block';
   document.getElementById('loader').style.display = 'none';
+}
+
+// =========================================================================
+// PAGINATION & FILTERING HELPERS
+// =========================================================================
+
+// Render the subset of filtered items for the current page
+function renderCurrentPage() {
+  var startIndex = (currentPage - 1) * itemsPerPage;
+  var endIndex = startIndex + itemsPerPage;
+  var pageItems = filteredSubscriptions.slice(startIndex, endIndex);
+  
+  renderList(pageItems);
+  updatePaginationControls();
+}
+
+// Handle clicking a status filter pill
+function setStatusFilter(status) {
+  currentStatusFilter = status;
+  
+  // Remove 'active' class from all pills
+  document.querySelectorAll('.pill').forEach(function(pill) {
+    pill.classList.remove('active');
+  });
+  
+  // Find and activate the selected pill
+  var targetSelector = '.pill';
+  if (status === 'all') targetSelector = '.pill:not([class*="status-"])';
+  else if (status === 'new') targetSelector = '.pill.status-new';
+  else if (status === 'renewal') targetSelector = '.pill.status-renewal';
+  else if (status === 'complete') targetSelector = '.pill.status-completed';
+  else if (status === 'cancelled') targetSelector = '.pill.status-cancelled';
+  
+  var targetPill = document.querySelector(targetSelector);
+  if (targetPill) {
+    targetPill.classList.add('active');
+  }
+  
+  filterList();
+}
+
+// Go to the previous page
+function prevPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    renderCurrentPage();
+  }
+}
+
+// Go to the next page
+function nextPage() {
+  var totalPages = Math.ceil(filteredSubscriptions.length / itemsPerPage) || 1;
+  if (currentPage < totalPages) {
+    currentPage++;
+    renderCurrentPage();
+  }
+}
+
+// Update page numbers and enable/disable navigation buttons
+function updatePaginationControls() {
+  var totalPages = Math.ceil(filteredSubscriptions.length / itemsPerPage) || 1;
+  
+  // Keep page index within boundaries
+  if (currentPage > totalPages) currentPage = totalPages;
+  if (currentPage < 1) currentPage = 1;
+  
+  document.getElementById('page-indicator').innerText = `Page ${currentPage} of ${totalPages}`;
+  document.getElementById('prev-page').disabled = (currentPage === 1);
+  document.getElementById('next-page').disabled = (currentPage === totalPages);
 }

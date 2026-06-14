@@ -283,6 +283,55 @@
       font-weight: 500;
     }
 
+    /* Filter Pills Styles */
+    .filter-pills::-webkit-scrollbar {
+      display: none;
+    }
+    .pill {
+      font-size: 10px;
+      padding: 5px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background-color: var(--bg-card);
+      color: var(--text-muted);
+      transition: all 0.2s ease;
+      white-space: nowrap;
+      text-transform: uppercase;
+    }
+    .pill:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+    .pill.active {
+      background-color: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    .pill.status-new.active { background-color: var(--color-blue); border-color: var(--color-blue); }
+    .pill.status-renewal.active { background-color: var(--color-purple); border-color: var(--color-purple); }
+    .pill.status-completed.active { background-color: var(--color-green); border-color: var(--color-green); }
+    .pill.status-cancelled.active { background-color: var(--color-red); border-color: var(--color-red); }
+
+    /* Pagination Styles */
+    .btn-pagination {
+      background: var(--bg-card);
+      color: var(--text-main);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-weight: 500;
+    }
+    .btn-pagination:hover:not(:disabled) {
+      background: var(--border);
+      color: var(--text-main);
+    }
+    .btn-pagination:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
     .error-msg {
       background-color: var(--color-red-light);
       color: var(--color-red);
@@ -313,8 +362,26 @@
     <div class="search-container">
       <input type="text" id="search-input" placeholder="Search by EU, SO, Product, or Sub ID..." onkeyup="filterList()">
     </div>
+    
+    <!-- Status Filter Pills -->
+    <div class="filter-pills" style="display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px;">
+      <span class="pill active" onclick="setStatusFilter('all')">ALL</span>
+      <span class="pill status-new" onclick="setStatusFilter('new')">NEW</span>
+      <span class="pill status-renewal" onclick="setStatusFilter('renewal')">RENEW</span>
+      <span class="pill status-completed" onclick="setStatusFilter('complete')">DONE</span>
+      <span class="pill status-cancelled" onclick="setStatusFilter('cancelled')">CANC</span>
+    </div>
+    
     <div id="loader" class="loading">Initializing Excel connection...</div>
     <div class="card-list" id="subscription-container"></div>
+    
+    <!-- Pagination Navigation -->
+    <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 12px;">
+      <button class="btn-pagination" id="prev-page" onclick="prevPage()">&larr; Prev</button>
+      <span id="page-indicator" style="font-size: 11px; font-weight: 500; color: var(--text-muted);">Page 1 of 1</span>
+      <button class="btn-pagination" id="next-page" onclick="nextPage()">Next &rarr;</button>
+    </div>
+    
     <button class="btn-secondary" onclick="runFormatter()" style="margin-top: 12px;">Re-Format Sheet Colors</button>
   </div>
 
