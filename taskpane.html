@@ -19,66 +19,107 @@
       --text-muted: #64748b;
       --primary: #4f46e5;
       --primary-hover: #4338ca;
+      --primary-light: rgba(79, 70, 229, 0.06);
       --border: #e2e8f0;
       
+      /* Standard colors for status borders */
       --color-green: #10b981;
-      --color-green-light: #e6f4ea;
-      --color-orange: #f59e0b;
-      --color-orange-light: #fef7e0;
       --color-red: #ef4444;
-      --color-red-light: #fce8e6;
       --color-blue: #3b82f6;
-      --color-blue-light: #e8f0fe;
-      --color-purple: #a855f7;
-      --color-purple-light: #f3e8ff;
-      --color-gray: #94a3b8;
-      --color-gray-light: #f1f5f9;
+      --color-purple: #8b5cf6;
+      
+      /* Modern SaaS style badge colors (Darker text, light backgrounds) */
+      --badge-new-text: #1d4ed8;
+      --badge-new-bg: #eff6ff;
+      --badge-renewal-text: #6b21a8;
+      --badge-renewal-bg: #f5f3ff;
+      --badge-completed-text: #047857;
+      --badge-completed-bg: #ecfdf5;
+      --badge-cancelled-text: #b91c1c;
+      --badge-cancelled-bg: #fef2f2;
+
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
     }
 
     body {
-      font-family: 'Outfit', sans-serif;
+      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 15px;
+      padding: 16px;
       background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(circle at 100% 0%, rgba(99, 102, 241, 0.04), transparent 250px),
+        radial-gradient(circle at 0% 100%, rgba(6, 182, 212, 0.04), transparent 250px);
+      background-attachment: fixed;
       color: var(--text-main);
       font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
 
-    h3 {
-      margin-top: 0;
-      margin-bottom: 15px;
-      font-weight: 600;
-      color: var(--primary);
+    .app-header {
+      margin-top: 8px;
+      margin-bottom: 20px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 8px;
-      font-size: 16px;
     }
 
-    /* Tabs Navigation */
+    .app-title {
+      font-size: 16px;
+      font-weight: 800;
+      letter-spacing: -0.025em;
+      background: linear-gradient(135deg, #0f172a 30%, #4f46e5 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .row-count-badge {
+      font-size: 10px;
+      font-weight: 600;
+      color: #4f46e5;
+      background: rgba(79, 70, 229, 0.06);
+      border: 1px solid rgba(79, 70, 229, 0.12);
+      padding: 3px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+
+    #row-count {
+      font-weight: 700;
+    }
+
+    /* Segmented Control Navigation */
     .tabs {
       display: flex;
-      border-bottom: 1px solid var(--border);
-      margin-bottom: 15px;
+      background: #f1f5f9;
+      padding: 3px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      border: 1px solid rgba(0, 0, 0, 0.02);
     }
 
     .tab {
       flex: 1;
       text-align: center;
-      padding: 10px 0;
-      font-weight: 500;
+      padding: 8px 10px;
+      font-weight: 600;
       color: var(--text-muted);
       cursor: pointer;
-      border-bottom: 2px solid transparent;
-      transition: all 0.2s ease;
-      font-size: 14px;
+      border-radius: 7px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 11px;
+      user-select: none;
+    }
+
+    .tab:hover {
+      color: var(--text-main);
     }
 
     .tab.active {
       color: var(--primary);
-      border-bottom-color: var(--primary);
+      background: var(--bg-card);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03), 0 0 0 1px rgba(0, 0, 0, 0.01);
     }
 
     .tab-content {
@@ -87,45 +128,55 @@
 
     .tab-content.active {
       display: block;
+      animation: slideInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
 
     /* Form Styles */
     .form-group {
-      margin-bottom: 12px;
+      margin-bottom: 0;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
 
     label {
       display: block;
-      font-weight: 500;
-      margin-bottom: 4px;
-      color: var(--text-main);
-      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: #475569;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
     input, select {
       width: 100%;
-      padding: 8px 10px;
-      border: 1px solid var(--border);
-      border-radius: 6px;
+      padding: 10px 12px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
       background-color: var(--bg-card);
       color: var(--text-main);
       font-family: 'Outfit', sans-serif;
       box-sizing: border-box;
       font-size: 12px;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--shadow-sm);
     }
 
     input:focus, select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+      background-color: var(--bg-card);
     }
 
     /* Flex Grid layouts */
     .row-split {
       display: flex;
       gap: 12px;
-      margin-bottom: 6px;
     }
 
     .row-split .form-group {
@@ -136,7 +187,6 @@
     .three-column-split {
       display: flex;
       gap: 12px;
-      margin-bottom: 6px;
     }
 
     .three-column-split .form-group {
@@ -146,96 +196,140 @@
 
     button {
       width: 100%;
-      padding: 10px;
+      padding: 10px 16px;
       border: none;
-      border-radius: 6px;
+      border-radius: 8px;
       font-weight: 600;
       cursor: pointer;
       font-family: 'Outfit', sans-serif;
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       font-size: 13px;
     }
 
+    button:active {
+      transform: scale(0.98);
+    }
+
     .btn-primary {
-      background-color: var(--primary);
+      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
       color: #ffffff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.25);
     }
 
     .btn-primary:hover {
-      background-color: var(--primary-hover);
+      background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary) 100%);
+      transform: translateY(-0.5px);
+      box-shadow: 0 6px 14px rgba(79, 70, 229, 0.35);
     }
 
     .btn-secondary {
-      background-color: transparent;
-      color: var(--text-muted);
-      border: 1px solid var(--border);
-      margin-top: 8px;
+      background-color: #ffffff;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+      box-shadow: var(--shadow-sm);
     }
 
     .btn-secondary:hover {
-      background-color: var(--border);
+      background-color: #f8fafc;
       color: var(--text-main);
+      border-color: #94a3b8;
     }
 
     /* Search & List Styles */
     .search-container {
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       position: relative;
+    }
+    
+    .search-container input {
+      padding-left: 36px;
+    }
+
+    .search-container::before {
+      content: "";
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2.5'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-size: contain;
+      pointer-events: none;
+      opacity: 0.7;
     }
 
     .card-list {
-      max-height: 480px;
+      max-height: calc(100vh - 200px);
+      min-height: 200px;
       overflow-y: auto;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 10px;
+      gap: 12px;
+      padding-right: 4px;
+    }
+
+    /* Custom Scrollbar for Card List */
+    .card-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .card-list::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .card-list::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 10px;
+    }
+    .card-list::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .card {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px;
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      border-radius: 12px;
+      padding: 14px;
       cursor: pointer;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
       display: flex;
       flex-direction: column;
       justify-content: space-between;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.02), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+      animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      overflow: hidden;
     }
 
     .card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 3px 8px rgba(0,0,0,0.05);
+      transform: translateY(-2px);
+      box-shadow: 0 12px 20px -8px rgba(0, 0, 0, 0.06), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+      border-color: rgba(99, 102, 241, 0.25);
     }
 
-    /* Card coloring based on Status */
-    .card.status-completed {
-      border-left: 4px solid var(--color-green);
-      background-color: var(--color-green-light);
-    }
-
-    .card.status-new {
-      border-left: 4px solid var(--color-blue);
-      background-color: var(--color-blue-light);
-    }
-
-    .card.status-renewal {
-      border-left: 4px solid var(--color-purple);
-      background-color: var(--color-purple-light);
-    }
-
-    .card.status-cancelled {
-      border-left: 4px solid var(--color-red);
-      background-color: var(--color-red-light);
-    }
+    /* Card status indicators */
+    .card.status-completed { border-left: 3px solid var(--color-green); }
+    .card.status-new { border-left: 3px solid var(--color-blue); }
+    .card.status-renewal { border-left: 3px solid var(--color-purple); }
+    .card.status-cancelled { border-left: 3px solid var(--color-red); }
 
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       font-weight: 600;
-      margin-bottom: 4px;
-      font-size: 12px;
+      margin-bottom: 6px;
+      font-size: 13px;
     }
 
     .card-title {
@@ -243,80 +337,173 @@
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
-      max-width: 140px;
+      max-width: 150px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+    }
+
+    .card-subtitle {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-main);
+      margin-bottom: 6px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .card-badge {
-      font-size: 9px;
-      padding: 2px 5px;
-      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 9999px;
       font-weight: 600;
-      text-transform: uppercase;
+      text-transform: capitalize;
+      letter-spacing: normal;
+    }
+    
+    .card-badge::before {
+      content: '';
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background-color: currentColor;
     }
 
-    .badge-completed { background-color: var(--color-green); color: white; }
-    .badge-new { background-color: var(--color-blue); color: white; }
-    .badge-renewal { background-color: var(--color-purple); color: white; }
-    .badge-cancelled { background-color: var(--color-red); color: white; }
+    .badge-completed { background-color: var(--badge-completed-bg); color: var(--badge-completed-text); }
+    .badge-new { background-color: var(--badge-new-bg); color: var(--badge-new-text); }
+    .badge-renewal { background-color: var(--badge-renewal-bg); color: var(--badge-renewal-text); }
+    .badge-cancelled { background-color: var(--badge-cancelled-bg); color: var(--badge-cancelled-text); }
 
     .card-details {
       font-size: 11px;
-      color: var(--text-muted);
       display: grid;
       grid-template-columns: 1fr;
-      gap: 3px;
-      margin-top: 4px;
+      gap: 6px;
+      margin-top: 10px;
+      background: #f8fafc;
+      border-radius: 8px;
+      padding: 8px 10px;
+      border: 1px solid #f1f5f9;
+    }
+    
+    .card-details div {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #334155;
+      font-weight: 600;
+    }
+    
+    .card-details div strong {
+      color: #64748b;
+      font-weight: 500;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
     }
 
     .card-footer {
-      font-size: 10px;
-      margin-top: 8px;
+      font-size: 11px;
+      margin-top: 10px;
       color: var(--text-muted);
-      border-top: 1px solid var(--border);
-      padding-top: 6px;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 8px;
       display: flex;
       justify-content: space-between;
+    }
+    
+    .card-footer span {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    
+    .card-footer strong {
+      color: #334155;
+      font-weight: 600;
     }
 
     .loading {
       text-align: center;
-      padding: 20px;
+      padding: 24px;
       color: var(--text-muted);
       font-weight: 500;
     }
 
-    /* Filter Pills Styles */
+    /* Filter Pills/Chips Styles */
     .filter-pills::-webkit-scrollbar {
       display: none;
     }
     .pill {
-      font-size: 10px;
+      font-size: 9px;
       padding: 5px 10px;
-      border-radius: 12px;
+      border-radius: 20px;
       font-weight: 600;
       cursor: pointer;
-      border: 1px solid var(--border);
+      border: 1px solid #e2e8f0;
       background-color: var(--bg-card);
       color: var(--text-muted);
-      transition: all 0.2s ease;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       white-space: nowrap;
       text-transform: uppercase;
+      letter-spacing: 0.03em;
+      box-shadow: var(--shadow-sm);
     }
     .pill:hover {
-      border-color: var(--primary);
-      color: var(--primary);
+      border-color: #cbd5e1;
+      color: var(--text-main);
+      transform: translateY(-0.5px);
     }
     .pill.active {
-      background-color: var(--primary);
+      background-color: #1e293b;
       color: white;
-      border-color: var(--primary);
+      border-color: #1e293b;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
     }
-    .pill.status-new.active { background-color: var(--color-blue); border-color: var(--color-blue); }
-    .pill.status-renewal.active { background-color: var(--color-purple); border-color: var(--color-purple); }
-    .pill.status-completed.active { background-color: var(--color-green); border-color: var(--color-green); }
-    .pill.status-cancelled.active { background-color: var(--color-red); border-color: var(--color-red); }
+    
+    .pill.status-new.active {
+      background-color: var(--badge-new-bg);
+      color: var(--badge-new-text);
+      border-color: #93c5fd;
+      box-shadow: 0 2px 4px rgba(30, 64, 175, 0.05);
+    }
+    .pill.status-renewal.active {
+      background-color: var(--badge-renewal-bg);
+      color: var(--badge-renewal-text);
+      border-color: #d8b4fe;
+      box-shadow: 0 2px 4px rgba(107, 33, 168, 0.05);
+    }
+    .pill.status-completed.active {
+      background-color: var(--badge-completed-bg);
+      color: var(--badge-completed-text);
+      border-color: #6ee7b7;
+      box-shadow: 0 2px 4px rgba(4, 120, 87, 0.05);
+    }
+    .pill.status-cancelled.active {
+      background-color: var(--badge-cancelled-bg);
+      color: var(--badge-cancelled-text);
+      border-color: #fca5a5;
+      box-shadow: 0 2px 4px rgba(185, 28, 28, 0.05);
+    }
 
     /* Pagination Styles */
+    .pagination-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      margin-bottom: 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px;
+      border-radius: 10px;
+      box-shadow: var(--shadow-sm);
+    }
+    
     .btn-pagination {
       background: var(--bg-card);
       color: var(--text-main);
@@ -324,32 +511,43 @@
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s ease;
-      font-weight: 500;
+      font-weight: 600;
+      padding: 6px 12px;
+      font-size: 11px;
+      box-shadow: var(--shadow-sm);
     }
     .btn-pagination:hover:not(:disabled) {
-      background: var(--border);
-      color: var(--text-main);
+      background: #f8fafc;
+      border-color: #cbd5e1;
     }
     .btn-pagination:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
+      box-shadow: none;
+      border-color: #e2e8f0;
+      color: #94a3b8;
     }
+    
     .error-msg {
-      background-color: var(--color-red-light);
-      color: var(--color-red);
-      padding: 8px;
-      border-radius: 6px;
-      margin-bottom: 12px;
-      font-size: 11px;
+      background-color: #fef2f2;
+      color: #b91c1c;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 16px;
+      font-size: 12px;
       display: none;
+      font-weight: 500;
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.05);
+      animation: slideInUp 0.25s ease forwards;
     }
     
     /* Custom Flatpickr Styling to match our premium UI */
     .flatpickr-calendar {
       font-family: 'Outfit', sans-serif !important;
-      border-radius: 8px !important;
+      border-radius: 12px !important;
       border: 1px solid var(--border) !important;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08) !important;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.03) !important;
       background: var(--bg-card) !important;
     }
     .flatpickr-day.selected, 
@@ -363,7 +561,7 @@
     .flatpickr-day:hover,
     .flatpickr-day.prevMonthDay:hover,
     .flatpickr-day.nextMonthDay:hover {
-      background: var(--color-blue-light) !important;
+      background: var(--primary-light) !important;
       color: var(--primary) !important;
     }
     .flatpickr-months .flatpickr-month {
@@ -380,13 +578,99 @@
     .flatpickr-calendar.arrowTop:after {
       display: none !important;
     }
+
+    /* Generator Section Styles */
+    #generator-trigger-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    #list-subtitle {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      letter-spacing: 0.02em;
+    }
+
+    #btn-show-generator {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 11px;
+      margin: 0;
+      border-radius: 20px;
+      background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(79, 70, 229, 0.2);
+    }
+    
+    #btn-show-generator:hover {
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+      transform: translateY(-0.5px);
+    }
+
+    #generator-section {
+      background: linear-gradient(135deg, #f8fafc 0%, #edd8ff 100%);
+      border: 1px solid rgba(167, 139, 250, 0.3);
+      border-radius: 12px;
+      padding: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 4px 15px rgba(167, 139, 250, 0.08);
+    }
+
+    .generator-title {
+      font-weight: 700;
+      font-size: 12px;
+      margin-bottom: 10px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .generator-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .generator-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .generator-col label {
+      font-size: 9px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: #64748b;
+    }
+
+    .generator-col select,
+    .generator-col input {
+      padding: 8px 10px;
+      font-size: 11px;
+      height: 32px;
+    }
+
+    .generator-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .generator-actions button {
+      padding: 8px;
+      font-size: 11px;
+      margin: 0;
+      flex: 1;
+    }
   </style>
 </head>
 <body>
 
-  <h3>
-    <span>ADB Subscription Manager</span>
-    <span style="font-size: 11px; font-weight: normal; color: var(--text-muted);">Total: <span id="row-count">0</span></span>
+  <h3 class="app-header">
+    <span class="app-title">ADB Subscription Manager</span>
+    <span class="row-count-badge">Total: <span id="row-count">0</span></span>
   </h3>
 
   <div class="tabs">
@@ -400,18 +684,18 @@
   <!-- LIST TAB -->
   <div id="tab-list" class="tab-content active">
     <!-- Generator Trigger Button -->
-    <div id="generator-trigger-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-      <span style="font-size: 11px; font-weight: 500; color: var(--text-muted);" id="list-subtitle">Active sheet: Monthly Master</span>
-      <button class="btn-primary" id="btn-show-generator" onclick="toggleGenerator()" style="width: auto; padding: 5px 12px; font-size: 11px; margin: 0;">Generate Monthly Sheet</button>
+    <div id="generator-trigger-container">
+      <span id="list-subtitle">Active sheet: Monthly Master</span>
+      <button class="btn-primary" id="btn-show-generator" onclick="toggleGenerator()">Generate Monthly Sheet</button>
     </div>
     
     <!-- Generator Section -->
-    <div id="generator-section" style="display: none; background: var(--color-blue-light); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
-      <div style="font-weight: 600; font-size: 12px; margin-bottom: 8px; color: var(--primary);">Generate Monthly Sheet</div>
-      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-        <div style="flex: 1;">
-          <label style="font-size: 10px; font-weight: 500; margin-bottom: 3px;">Month</label>
-          <select id="gen-month" style="padding: 5px; font-size: 11px; height: 28px;">
+    <div id="generator-section" style="display: none;">
+      <div class="generator-title">Generate Monthly Sheet</div>
+      <div class="generator-row">
+        <div class="generator-col">
+          <label for="gen-month">Month</label>
+          <select id="gen-month">
             <option value="January">January</option>
             <option value="February">February</option>
             <option value="March">March</option>
@@ -426,14 +710,14 @@
             <option value="December">December</option>
           </select>
         </div>
-        <div style="flex: 1;">
-          <label style="font-size: 10px; font-weight: 500; margin-bottom: 3px;">Year</label>
-          <input type="number" id="gen-year" value="2026" style="padding: 5px; font-size: 11px; height: 28px;">
+        <div class="generator-col">
+          <label for="gen-year">Year</label>
+          <input type="number" id="gen-year" value="2026">
         </div>
       </div>
-      <div style="display: flex; gap: 8px;">
-        <button type="button" class="btn-primary" onclick="generateMonthlySheet()" style="padding: 6px; font-size: 11px; margin: 0; flex: 1;">Generate</button>
-        <button type="button" class="btn-secondary" onclick="toggleGenerator()" style="padding: 6px; font-size: 11px; margin: 0; flex: 1;">Cancel</button>
+      <div class="generator-actions">
+        <button type="button" class="btn-primary" onclick="generateMonthlySheet()">Generate</button>
+        <button type="button" class="btn-secondary" onclick="toggleGenerator()">Cancel</button>
       </div>
     </div>
 
@@ -442,7 +726,7 @@
     </div>
     
     <!-- Status Filter Pills -->
-    <div class="filter-pills" style="display: flex; gap: 6px; overflow-x: auto; margin-bottom: 12px; padding-bottom: 4px;">
+    <div class="filter-pills">
       <span class="pill active" onclick="setStatusFilter('all')">ALL</span>
       <span class="pill status-new" onclick="setStatusFilter('new')">NEW</span>
       <span class="pill status-renewal" onclick="setStatusFilter('renewal')">RENEWAL</span>
@@ -454,13 +738,13 @@
     <div class="card-list" id="subscription-container"></div>
     
     <!-- Pagination Navigation -->
-    <div class="pagination-container" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; margin-bottom: 12px;">
+    <div class="pagination-container">
       <button class="btn-pagination" id="prev-page" onclick="prevPage()">&larr; Prev</button>
-      <span id="page-indicator" style="font-size: 11px; font-weight: 500; color: var(--text-muted);">Page 1 of 1</span>
+      <span id="page-indicator">Page 1 of 1</span>
       <button class="btn-pagination" id="next-page" onclick="nextPage()">Next &rarr;</button>
     </div>
     
-    <button class="btn-secondary" onclick="runFormatter()" style="margin-top: 12px;">Re-Format Sheet Colors</button>
+    <button class="btn-secondary" onclick="runFormatter()" style="margin-top: 16px;">Re-Format Sheet Colors</button>
   </div>
 
   <!-- FORM TAB -->

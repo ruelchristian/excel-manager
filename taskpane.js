@@ -268,7 +268,7 @@ function renderList(records) {
             '<div class="card-title">' + rec.eu + '</div>' +
             '<div class="card-badge ' + badgeClass + '">' + statusLabel + '</div>' +
           '</div>' +
-          '<div style="font-size: 12px; font-weight: 500; color: #1e293b; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + rec.subscription + '</div>' +
+          '<div class="card-subtitle">' + rec.subscription + '</div>' +
           '<div class="card-details">' +
             '<div><strong>FA/SO:</strong> ' + (rec.fa || '-') + ' / ' + (rec.so || '-') + '</div>' +
             '<div><strong>Sub ID:</strong> ' + (rec.subId || '-') + '</div>' +
@@ -287,7 +287,7 @@ function renderList(records) {
             '<div class="card-title">' + rec.eu + '</div>' +
             '<div class="card-badge ' + badgeClass + '">' + statusLabel + '</div>' +
           '</div>' +
-          '<div style="font-size: 12px; font-weight: 500; color: #1e293b; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">' + rec.subscription + '</div>' +
+          '<div class="card-subtitle">' + rec.subscription + '</div>' +
           '<div class="card-details">' +
             '<div><strong>FA/SO:</strong> ' + (rec.fa_so || '-') + '</div>' +
             '<div><strong>Start Date:</strong> ' + (rec.startDate || '-') + '</div>' +
