@@ -555,13 +555,6 @@ async function sortSubscriptions() {
           var weightStatusB = statusWeights[statusB] || 5;
           if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
 
-          // 2. Month (Index 0)
-          var monthA = String(a[0] || '').trim().toLowerCase();
-          var monthB = String(b[0] || '').trim().toLowerCase();
-          var weightMonthA = monthOrder[monthA] || 13;
-          var weightMonthB = monthOrder[monthB] || 13;
-          if (weightMonthA !== weightMonthB) return weightMonthA - weightMonthB;
-          
           var getTime = function(val) {
             if (typeof val === 'number') return val;
             if (!val) return 0;
@@ -569,7 +562,7 @@ async function sortSubscriptions() {
             return isNaN(parsed) ? 0 : parsed;
           };
 
-          // 3. Start Date (Index 5) - Descending
+          // 2. Start Date (Index 5) - Descending
           var timeA = getTime(a[5]);
           var timeB = getTime(b[5]);
           if (timeA !== timeB) {
@@ -578,7 +571,7 @@ async function sortSubscriptions() {
             return timeB - timeA;
           }
           
-          // 4. EU Name (Index 7)
+          // 3. EU Name (Index 7)
           var nameA = String(a[7] || '').trim().toLowerCase();
           var nameB = String(b[7] || '').trim().toLowerCase();
           return nameA.localeCompare(nameB);

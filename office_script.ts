@@ -65,14 +65,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     let weightStatusB = statusWeights[statusB] || 5;
     if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
 
-    // 2. Month (Index 0)
-    let monthA = String(a[0] || '').trim().toLowerCase();
-    let monthB = String(b[0] || '').trim().toLowerCase();
-    let weightMonthA = monthOrder[monthA] || 13;
-    let weightMonthB = monthOrder[monthB] || 13;
-    if (weightMonthA !== weightMonthB) return weightMonthA - weightMonthB;
-    
-    // 3. Start Date (Index 5) - Descending
+    // 2. Start Date (Index 5) - Descending
     let timeA = getTime(a[5]);
     let timeB = getTime(b[5]);
     if (timeA !== timeB) {
@@ -81,7 +74,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
       return timeB - timeA;
     }
     
-    // 4. EU Name (Index 7)
+    // 3. EU Name (Index 7)
     let nameA = String(a[7] || '').trim().toLowerCase();
     let nameB = String(b[7] || '').trim().toLowerCase();
     return nameA.localeCompare(nameB);
