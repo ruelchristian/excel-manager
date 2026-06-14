@@ -259,8 +259,7 @@
     }
 
     .card-list {
-      max-height: calc(100vh - 200px);
-      min-height: 200px;
+      max-height: 480px;
       overflow-y: auto;
       display: grid;
       grid-template-columns: 1fr;
@@ -453,6 +452,14 @@
     }
 
     /* Filter Pills/Chips Styles */
+    .filter-pills {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      margin-bottom: 16px;
+      padding-bottom: 6px;
+      scrollbar-width: none;
+    }
     .filter-pills::-webkit-scrollbar {
       display: none;
     }
