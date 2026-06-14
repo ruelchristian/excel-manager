@@ -351,14 +351,53 @@
   </h3>
 
   <div class="tabs">
-    <div class="tab active" onclick="switchTab('list')">View & Search</div>
-    <div class="tab" onclick="switchTab('form')">Add/Edit Form</div>
+    <div class="tab active" id="tab-btn-monthly" onclick="switchTab('monthly')">Monthly Master</div>
+    <div class="tab" id="tab-btn-annual" onclick="switchTab('annual')">Annual Master</div>
+    <div class="tab" id="tab-btn-form" onclick="switchTab('form')">Add/Edit Form</div>
   </div>
 
   <div class="error-msg" id="error-box"></div>
 
   <!-- LIST TAB -->
   <div id="tab-list" class="tab-content active">
+    <!-- Generator Trigger Button -->
+    <div id="generator-trigger-container" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <span style="font-size: 11px; font-weight: 500; color: var(--text-muted);" id="list-subtitle">Active sheet: Monthly Master</span>
+      <button class="btn-primary" id="btn-show-generator" onclick="toggleGenerator()" style="width: auto; padding: 5px 12px; font-size: 11px; margin: 0;">Generate Monthly Sheet</button>
+    </div>
+    
+    <!-- Generator Section -->
+    <div id="generator-section" style="display: none; background: var(--color-blue-light); border: 1px solid var(--border); border-radius: 8px; padding: 12px; margin-bottom: 12px;">
+      <div style="font-weight: 600; font-size: 12px; margin-bottom: 8px; color: var(--primary);">Generate Monthly Sheet</div>
+      <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+        <div style="flex: 1;">
+          <label style="font-size: 10px; font-weight: 500; margin-bottom: 3px;">Month</label>
+          <select id="gen-month" style="padding: 5px; font-size: 11px; height: 28px;">
+            <option value="January">January</option>
+            <option value="February">February</option>
+            <option value="March">March</option>
+            <option value="April">April</option>
+            <option value="May">May</option>
+            <option value="June">June</option>
+            <option value="July">July</option>
+            <option value="August">August</option>
+            <option value="September">September</option>
+            <option value="October">October</option>
+            <option value="November">November</option>
+            <option value="December">December</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label style="font-size: 10px; font-weight: 500; margin-bottom: 3px;">Year</label>
+          <input type="number" id="gen-year" value="2026" style="padding: 5px; font-size: 11px; height: 28px;">
+        </div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button type="button" class="btn-primary" onclick="generateMonthlySheet()" style="padding: 6px; font-size: 11px; margin: 0; flex: 1;">Generate</button>
+        <button type="button" class="btn-secondary" onclick="toggleGenerator()" style="padding: 6px; font-size: 11px; margin: 0; flex: 1;">Cancel</button>
+      </div>
+    </div>
+
     <div class="search-container">
       <input type="text" id="search-input" placeholder="Search by EU, SO, Product, or Sub ID..." onkeyup="filterList()">
     </div>
@@ -409,8 +448,8 @@
         </div>
       </div>
 
-      <!-- 3-Column Split: Months Left, Total Months, and Sub ID -->
-      <div class="three-column-split">
+      <!-- 3-Column Split: Months Left, Total Months, and Sub ID (Monthly Only) -->
+      <div class="three-column-split" id="monthly-fields-group1">
         <div class="form-group">
           <label for="form-months-left">Months Left</label>
           <input type="number" id="form-months-left" min="0" placeholder="e.g. 0">
@@ -435,7 +474,7 @@
           <label for="form-end-date">End Date</label>
           <input type="date" id="form-end-date">
         </div>
-        <div class="form-group">
+        <div class="form-group" id="monthly-fields-month">
           <label for="form-month">Renewal Month</label>
           <select id="form-month" required>
             <option value="">-- Select Month --</option>
@@ -455,8 +494,8 @@
         </div>
       </div>
 
-      <!-- Row: FA and SO Numbers -->
-      <div class="row-split">
+      <!-- Row: FA and SO Numbers (Monthly Only) -->
+      <div class="row-split" id="monthly-fields-group2">
         <div class="form-group">
           <label for="form-fa">FA Number</label>
           <input type="text" id="form-fa" placeholder="e.g. FAUNI25071210">
@@ -465,6 +504,12 @@
           <label for="form-so">SO Number</label>
           <input type="text" id="form-so" placeholder="e.g. SOUNIAA79455">
         </div>
+      </div>
+
+      <!-- Row: FA/SO Number (Annual Only, Hidden by Default) -->
+      <div class="form-group" id="annual-fields-faso" style="display: none; margin-bottom: 12px;">
+        <label for="form-fa-so">FA / SO Number</label>
+        <input type="text" id="form-fa-so" placeholder="e.g. FAUNI25020693  SOUNIAA75787">
       </div>
 
       <!-- Row: Status and PO Status -->
@@ -478,7 +523,7 @@
             <option value="Cancelled">Cancelled</option>
           </select>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="monthly-fields-postatus">
           <label for="form-po-status">PO Status</label>
           <select id="form-po-status" required>
             <option value="PO Done">PO Done</option>
