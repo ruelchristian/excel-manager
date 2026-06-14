@@ -524,21 +524,26 @@
       margin-bottom: 14px;
       background: var(--bg-card);
       border: 1px solid var(--border);
-      padding: 5px;
+      padding: 6px 10px;
       border-radius: 10px;
       box-shadow: var(--shadow-sm);
     }
     
     .btn-pagination {
+      width: 32px;
+      height: 32px;
+      padding: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
       background: var(--bg-card);
       color: var(--text-main);
       border: 1px solid #cbd5e1;
-      border-radius: 6px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
-      font-weight: 600;
-      padding: 6px 12px;
-      font-size: 11px;
+      font-size: 16px;
+      font-weight: 700;
       box-shadow: var(--shadow-sm);
     }
     .btn-pagination:hover:not(:disabled) {
@@ -766,9 +771,9 @@
     
     <!-- Pagination Navigation -->
     <div class="pagination-container">
-      <button class="btn-pagination" id="prev-page" onclick="prevPage()">&larr; Prev</button>
+      <button class="btn-pagination" id="prev-page" onclick="prevPage()">&lsaquo;</button>
       <span id="page-indicator">Page 1 of 1</span>
-      <button class="btn-pagination" id="next-page" onclick="nextPage()">Next &rarr;</button>
+      <button class="btn-pagination" id="next-page" onclick="nextPage()">&rsaquo;</button>
     </div>
     
     <button class="btn-secondary" onclick="runFormatter()" style="margin-top: 16px;">Re-Format Sheet Colors</button>
