@@ -1225,7 +1225,7 @@ async function generateMonthlySheet() {
         statusColRange.dataValidation.rule = {
           list: {
             inCellDropDown: true,
-            source: "PENDING, RENEWED, DONE, CANCELLED"
+            source: "PENDING,RENEWED,DONE,CANCELLED"
           }
         };
 
@@ -1256,8 +1256,8 @@ async function generateMonthlySheet() {
         formatCancelled.custom.format.fill.color = colorCancelled;
         formatCancelled.custom.format.font.color = "#000000";
         
-        // Auto-fit columns B to H to prevent text truncation and ensure they are wide enough
-        targetSheet.getRange("B:H").format.autofitColumns();
+        // Auto-fit columns B to H based only on the table range to prevent sheet titles from making columns wider
+        targetSheet.getRange("B6:H" + (6 + rowsToWrite.length)).format.autofitColumns();
         await context.sync();
       }
 
