@@ -382,6 +382,8 @@ function editRecord(rec) {
 
   document.getElementById('save-btn').innerText = 'Update (Row ' + rec.rowNum + ')';
   document.getElementById('cancel-edit').style.display = 'block';
+  var deleteBtn = document.getElementById('delete-btn');
+  if (deleteBtn) deleteBtn.style.display = 'block';
 
   switchTab('form');
 }
@@ -394,6 +396,8 @@ function resetForm() {
   document.getElementById('form-row-num').value = '';
   document.getElementById('save-btn').innerText = 'Save Subscription';
   document.getElementById('cancel-edit').style.display = 'none';
+  var deleteBtn = document.getElementById('delete-btn');
+  if (deleteBtn) deleteBtn.style.display = 'none';
 }
 
 // Save form data back to Excel Sheet
@@ -497,6 +501,62 @@ async function saveRecord(e) {
     showError("Failed to save record: " + err.message);
     document.getElementById('save-btn').disabled = false;
     document.getElementById('save-btn').innerText = 'Save Subscription';
+  }
+}
+
+// Delete form data from Excel Sheet
+async function deleteRecord() {
+  var rowNumVal = document.getElementById('form-row-num').value;
+  if (!rowNumVal) return;
+  var rowNum = parseInt(rowNumVal, 10);
+
+  if (!confirm("Are you sure you want to delete this subscription entry from Row " + rowNum + "?")) {
+    return;
+  }
+
+  document.getElementById('error-box').style.display = 'none';
+  var deleteBtn = document.getElementById('delete-btn');
+  var saveBtn = document.getElementById('save-btn');
+  var cancelEdit = document.getElementById('cancel-edit');
+
+  if (deleteBtn) {
+    deleteBtn.innerText = 'Deleting...';
+    deleteBtn.disabled = true;
+  }
+  if (saveBtn) saveBtn.disabled = true;
+  if (cancelEdit) cancelEdit.disabled = true;
+
+  try {
+    await Excel.run(async function (context) {
+      var sheetName = currentListType === 'monthly' ? "ADB MASTER LIST MONTHLY" : "ADB MASTER LIST ANNUAL";
+      var sheet = context.workbook.worksheets.getItem(sheetName);
+      
+      // Delete the entire row in Excel
+      var range = sheet.getRange("A" + rowNum + ":A" + rowNum);
+      var entireRow = range.getEntireRow();
+      entireRow.delete(Excel.DeleteShiftDirection.up);
+
+      await context.sync();
+    });
+
+    // Run custom sort and color formatting
+    await sortSubscriptions();
+    
+    resetForm();
+    switchTab(currentListType);
+    showSuccess("Subscription entry deleted successfully!");
+  } catch (err) {
+    showError("Failed to delete record: " + err.message);
+  } finally {
+    var deleteBtn = document.getElementById('delete-btn');
+    var saveBtn = document.getElementById('save-btn');
+    var cancelEdit = document.getElementById('cancel-edit');
+    if (deleteBtn) {
+      deleteBtn.disabled = false;
+      deleteBtn.innerText = 'Delete Entry';
+    }
+    if (saveBtn) saveBtn.disabled = false;
+    if (cancelEdit) cancelEdit.disabled = false;
   }
 }
 

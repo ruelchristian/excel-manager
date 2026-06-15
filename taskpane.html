@@ -233,6 +233,18 @@
       border-color: #94a3b8;
     }
 
+    .btn-danger {
+      background: linear-gradient(135deg, var(--color-red) 0%, #f87171 100%);
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-danger:hover {
+      background: linear-gradient(135deg, #dc2626 0%, var(--color-red) 100%);
+      transform: translateY(-0.5px);
+      box-shadow: 0 6px 14px rgba(239, 68, 68, 0.35);
+    }
+
     /* Search & List Styles */
     .search-container {
       margin-bottom: 14px;
@@ -890,6 +902,7 @@
 
       <button type="submit" class="btn-primary" id="save-btn" style="margin-top: 8px;">Save Subscription</button>
       <button type="button" class="btn-secondary" id="cancel-edit" onclick="resetForm()" style="display: none;">Cancel Edit</button>
+      <button type="button" class="btn-danger" id="delete-btn" onclick="deleteRecord()" style="display: none; margin-top: 8px;">Delete Entry</button>
     </form>
   </div>
 
