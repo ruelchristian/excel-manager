@@ -82,10 +82,10 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   
   range.setValues(values);
   
-  let colorNew = '#fef9c3';        // Soft Yellow
-  let colorRenewal = '#dcfce7';    // Soft Green
-  let colorComplete = '#dbeafe';   // Soft Blue
-  let colorCancelled = '#fee2e2';  // Soft Red
+  let colorNew = '#fef08a';        // Soft Yellow
+  let colorRenewal = '#bbf7d0';    // Soft Green
+  let colorComplete = '#bfdbfe';   // Soft Blue
+  let colorCancelled = '#fecaca';  // Soft Red
   let colorDefault = '#ffffff';    // White
   
   for (let i = 0; i < values.length; i++) {
@@ -191,9 +191,9 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   
   range.setValues(values);
   
-  let colorActive = '#fef9c3';       // Soft Yellow
-  let colorComplete = '#dbeafe';     // Soft Blue
-  let colorCancelled = '#fee2e2';    // Soft Red
+  let colorActive = '#fef08a';       // Soft Yellow
+  let colorComplete = '#bfdbfe';     // Soft Blue
+  let colorCancelled = '#fecaca';    // Soft Red
   let colorDefault = '#ffffff';
   
   for (let i = 0; i < values.length; i++) {
