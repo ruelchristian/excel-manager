@@ -272,6 +272,9 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   // Set horizontal alignment to Center for the entire range (headers + data)
   sheet.getRange("A3:L10000").getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
+  // Auto-fit all columns to prevent text truncation
+  sheet.getUsedRange().getFormat().getAutofitColumns();
+
   console.log("Monthly Master sheet sorted and colored successfully.");
 }
 
@@ -540,6 +543,9 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   // Set horizontal alignment to Center for the entire range (headers + data)
   sheet.getRange("A4:F10000").getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
+  // Auto-fit all columns to prevent text truncation
+  sheet.getUsedRange().getFormat().getAutofitColumns();
+
   console.log("Annual Master sheet sorted and colored successfully.");
 }
 

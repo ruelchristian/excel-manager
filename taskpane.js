@@ -958,6 +958,11 @@ async function sortSubscriptions() {
 
         // Re-apply background colors
         await formatSheetColorsDirect(sheet, values);
+
+        // Auto-fit all columns in the sheet's active range to prevent text truncation
+        var usedRange = sheet.getUsedRange();
+        usedRange.format.autofitColumns();
+        await context.sync();
       }
     });
   } catch (err) {
