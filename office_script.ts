@@ -29,34 +29,35 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   let headerValues = headerRange.getValues()[0];
   
   let colBHeader = String(headerValues[1] || '').trim().toUpperCase();
+  let colCHeader = String(headerValues[2] || '').trim().toUpperCase();
   let colDHeader = String(headerValues[3] || '').trim().toUpperCase();
   
-  let isOld10Column = (colBHeader === "MONTHS LEFT");
-  let isOld12Column = (colBHeader === "STATUS" && colDHeader === "MONTHS LEFT");
+  let is12Column = (colBHeader === "STATUS" && colDHeader === "MONTHS LEFT");
+  let is10Column = (colBHeader === "MONTHS LEFT");
+  let is9Column = (colBHeader === "STATUS" && colDHeader === "R/T");
 
   let values: any[][];
+  let startRow = 4;
   
-  if (isOld10Column || isOld12Column) {
-    // Read the old data
+  if (is10Column || is9Column) {
     let oldValues: any[][];
-    if (isOld10Column) {
+    if (is10Column) {
       let oldRange = sheet.getRange("A4:J" + lastRowIndex);
       oldValues = oldRange.getValues();
     } else {
-      let oldRange = sheet.getRange("A4:L" + lastRowIndex);
+      let oldRange = sheet.getRange("A4:I" + lastRowIndex);
       oldValues = oldRange.getValues();
     }
 
-    // Restructure to 9 columns in-memory
     let restructuredValues: any[][] = [];
     for (let i = 0; i < oldValues.length; i++) {
-      let month: any, status: any, poStatus: any;
-      let monthsLeft: any, totalMonths: any;
-      let startDate: any, endDate: any;
-      let eu: any, fa: any, so: any;
-      let subId: any, subName: any;
+      let month: any = "", status: any = "", poStatus: any = "";
+      let monthsLeft: any = 0, totalMonths: any = 0;
+      let startDate: any = "", endDate: any = "";
+      let eu: any = "", fa: any = "", so: any = "";
+      let subId: any = "", subName: any = "";
 
-      if (isOld10Column) {
+      if (is10Column) {
         let rawStatus = oldValues[i][0];
         monthsLeft = oldValues[i][1];
         totalMonths = oldValues[i][2];
@@ -73,91 +74,90 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
         status = parsed.status;
         poStatus = parsed.poStatus;
       } else {
+        // 9-column layout
         month = oldValues[i][0];
         status = oldValues[i][1];
         poStatus = oldValues[i][2];
-        monthsLeft = oldValues[i][3];
-        totalMonths = oldValues[i][4];
-        startDate = oldValues[i][5];
-        endDate = oldValues[i][6];
-        eu = oldValues[i][7];
-        fa = oldValues[i][8];
-        so = oldValues[i][9];
-        subId = oldValues[i][10];
-        subName = oldValues[i][11];
+        
+        let rt = cleanRTValue(oldValues[i][3]);
+        let rtParts = rt.split('/');
+        monthsLeft = rtParts[0] ? parseInt(rtParts[0].trim(), 10) : 0;
+        totalMonths = rtParts[1] ? parseInt(rtParts[1].trim(), 10) : 0;
+
+        let period = cleanPeriodValue(oldValues[i][4]);
+        let periodParts = period.trim().split(/\s+/);
+        let startStr = periodParts[0] || '';
+        let endStr = periodParts[1] || '';
+        startDate = parseDDMMMYY(startStr);
+        endDate = parseDDMMMYY(endStr);
+
+        eu = oldValues[i][5];
+
+        let faso = String(oldValues[i][6] || '').trim();
+        let fasoParts = faso.split(/\s{2,}/);
+        if (fasoParts.length >= 2) {
+          fa = fasoParts[0].trim();
+          so = fasoParts[1].trim();
+        } else {
+          let soIndex = faso.indexOf('SOUNI');
+          if (soIndex !== -1) {
+            fa = faso.substring(0, soIndex).trim();
+            so = faso.substring(soIndex).trim();
+          } else {
+            fa = faso;
+          }
+        }
+
+        subId = oldValues[i][7];
+        subName = oldValues[i][8];
       }
-
-      // Merge Months Left and Total Months into R/T
-      let left = monthsLeft !== null && monthsLeft !== "" ? String(monthsLeft).trim() : "0";
-      let total = totalMonths !== null && totalMonths !== "" ? String(totalMonths).trim() : "0";
-      let rt = left + "/" + total;
-
-      // Merge Start Date and End Date into Period
-      let startStr = formatDateDDMMMYY(startDate);
-      let endStr = formatDateDDMMMYY(endDate);
-      let period = startStr + (endStr ? "  " + endStr : "");
-
-      // Merge FA and SO into FA/SO
-      let faStr = String(fa || '').trim();
-      let soStr = String(so || '').trim();
-      let faso = faStr + (faStr && soStr ? "  " : "") + soStr;
 
       restructuredValues.push([
         month,
         status,
         poStatus,
-        rt,
-        period,
+        monthsLeft,
+        totalMonths,
+        startDate,
+        endDate,
         eu,
-        faso,
+        fa,
+        so,
         subId,
         subName
       ]);
     }
 
-    // Write new 9-column headers
+    // Write new 12-column headers
     let newHeaders = [
-      "MONTH", "STATUS", "PO STATUS", "R/T", "Period",
-      "EU", "FA/SO", "SUBSCRIPTION ID", "SUBSCRIPTION"
+      "MONTH", "STATUS", "PO STATUS", "MONTHS LEFT", "TOTAL MONTHS",
+      "START DATE", "END DATE", "EU", "FA", "SO", "SUBSCRIPTION ID", "SUBSCRIPTION"
     ];
-    // Clear columns A to L below header (contents, formats, validation) to remove date formats
-    let clearRangeData = sheet.getRange("A4:L" + lastRowIndex);
-    clearRangeData.clear(ExcelScript.ClearApplyTo.all);
-
-    // Clear header contents only (preserving header style)
-    let clearRangeHeader = sheet.getRange("A3:L3");
-    clearRangeHeader.clear(ExcelScript.ClearApplyTo.contents);
+    // Clear data rows (contents, formats, validation) to remove date formats
+    sheet.getRange("A4:L" + lastRowIndex).clear(ExcelScript.ClearApplyTo.all);
+    // Clear header contents
+    sheet.getRange("A3:L3").clear(ExcelScript.ClearApplyTo.contents);
 
     // Set new headers
-    let newHeaderRange = sheet.getRange("A3:I3");
-    newHeaderRange.setValues([newHeaders]);
+    sheet.getRange("A3:L3").setValues([newHeaders]);
 
-    // Set comments (notes/tooltips) to headers
-    let setComment = (cell: ExcelScript.Range, text: string) => {
+    // Delete any old comments/notes from headers (D3, E3, G3)
+    let deleteComment = (cell: ExcelScript.Range) => {
       let existing = sheet.getCommentByCell(cell);
       if (existing) {
         existing.delete();
       }
-      sheet.addComment(cell, text);
     };
-    setComment(sheet.getRange("D3"), "R/T = Remaining Months / Total Months");
-    setComment(sheet.getRange("E3"), "Period = Start Date  End Date");
-    setComment(sheet.getRange("G3"), "FA/SO = Financial Advisor  Sales Officer");
+    deleteComment(sheet.getRange("D3"));
+    deleteComment(sheet.getRange("E3"));
+    deleteComment(sheet.getRange("G3"));
 
     values = restructuredValues;
   } else {
-    // Already 9 columns, read range A4:I
-    let range = sheet.getRange("A4:I" + lastRowIndex);
-    values = range.getValues();
+    // Already 12 columns, read range A4:L
+    values = sheet.getRange("A4:L" + lastRowIndex).getValues();
   }
 
-  // Heal values (clean R/T and Period columns if Excel auto-converted them to dates)
-  for (let i = 0; i < values.length; i++) {
-    values[i][3] = cleanRTValue(values[i][3]);
-    values[i][4] = cleanPeriodValue(values[i][4]);
-  }
-
-  
   let statusWeights: { [key: string]: number } = {
     'new': 1,
     'renewal': 2,
@@ -165,6 +165,13 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     'cancelled': 4
   };
   
+  let getTime = function(val: any) {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    let parsed = new Date(val).getTime();
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
   // Sort values: Status -> Start Date (Recent to Oldest) -> EU Name
   values.sort((a, b) => {
     // 1. Status (Index 1)
@@ -174,22 +181,28 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     let weightStatusB = statusWeights[statusB] || 5;
     if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
 
-    // 2. Start Date (Index 4) - Descending
-    let timeA = getTimeFromPeriod(a[4]);
-    let timeB = getTimeFromPeriod(b[4]);
+    // 2. Start Date (Index 5) - Descending
+    let timeA = getTime(a[5]);
+    let timeB = getTime(b[5]);
     if (timeA !== timeB) {
       if (timeA === 0) return 1;
       if (timeB === 0) return -1;
       return timeB - timeA;
     }
     
-    // 3. EU Name (Index 5)
-    let nameA = String(a[5] || '').trim().toLowerCase();
-    let nameB = String(b[5] || '').trim().toLowerCase();
+    // 3. EU Name (Index 7)
+    let nameA = String(a[7] || '').trim().toLowerCase();
+    let nameB = String(b[7] || '').trim().toLowerCase();
     return nameA.localeCompare(nameB);
   });
   
-  let writeRange = sheet.getRange("A4:I" + lastRowIndex);
+  // Set number formats for columns BEFORE writing values to prevent Excel date auto-conversion
+  sheet.getRange("A4:C10000").setNumberFormatLocal("@");
+  sheet.getRange("D4:E10000").setNumberFormatLocal("General");
+  sheet.getRange("F4:G10000").setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
+  sheet.getRange("H4:L10000").setNumberFormatLocal("@");
+
+  let writeRange = sheet.getRange("A4:L" + lastRowIndex);
   writeRange.setValues(values);
   
   let colorNew = '#fef08a';        // Soft Yellow
@@ -212,16 +225,12 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
       rowColor = colorCancelled;
     }
     
-    let rowRange = sheet.getRange("A" + (i + 4) + ":I" + (i + 4));
+    let rowRange = sheet.getRange("A" + (i + 4) + ":L" + (i + 4));
     rowRange.getFormat().getFill().setColor(rowColor);
   }
 
-  // Clear any existing validations in columns B, C, D first
-  sheet.getRange("B4:D10000").getDataValidation().clear();
-
-  // Set number format of all columns (A to I) to Text to prevent Excel from converting R/T and Period to dates
-  sheet.getRange("A4:I10000").setNumberFormatLocal("@");
-
+  // Clear any existing validations in columns A to L
+  sheet.getRange("A4:L10000").getDataValidation().clear();
 
   if (lastRowIndex >= 4) {
     let statusRange = sheet.getRange("B4:B" + lastRowIndex);
@@ -486,7 +495,7 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   }
 
   // Set number formats for dates and text in Annual sheet
-  sheet.getRange("B5:C10000").setNumberFormatLocal("yyyy-mm-dd");
+  sheet.getRange("B5:C10000").setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
   sheet.getRange("A5:A10000").setNumberFormatLocal("@");
   sheet.getRange("D5:F10000").setNumberFormatLocal("@");
 

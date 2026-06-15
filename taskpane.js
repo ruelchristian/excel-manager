@@ -190,8 +190,8 @@ async function loadSubscriptions() {
         return;
       }
 
-      // Read columns (9 columns for Monthly, 6 columns for Annual)
-      var rangeColLetter = currentListType === 'monthly' ? "I" : "F";
+      // Read columns (12 columns for Monthly, 6 columns for Annual)
+      var rangeColLetter = currentListType === 'monthly' ? "L" : "F";
       var range = sheet.getRange("A" + startRow + ":" + rangeColLetter + lastRowIndex);
       range.load(["values", "text"]);
       await context.sync();
@@ -206,56 +206,23 @@ async function loadSubscriptions() {
         var rowNum = i + startRow;
 
         if (currentListType === 'monthly') {
-          // Ignore empty rows (Column F is EU / index 5, Column I is Subscription Name / index 8)
-          if (!rowVal[5] && !rowVal[8]) continue;
-
-          // Split R/T (index 3) into monthsLeft and totalMonths
-          var rtParts = String(rowVal[3] || '').split('/');
-          var monthsLeft = rtParts[0] || '';
-          var totalMonths = rtParts[1] || '';
-
-          // Split Period (index 4) into startDate and endDate
-          var periodParts = String(rowVal[4] || '').split('  '); // two spaces
-          var startDateFormatted = periodParts[0] || '';
-          var endDateFormatted = periodParts[1] || '';
-
-          var startDate = parseDDMMMYY(startDateFormatted);
-          var endDate = parseDDMMMYY(endDateFormatted);
-
-          // Split FA/SO (index 6) into fa and so
-          var fasoVal = String(rowVal[6] || '').trim();
-          var fa = '';
-          var so = '';
-          if (fasoVal) {
-            var fasoParts = fasoVal.split('  ');
-            if (fasoParts.length >= 2) {
-              fa = fasoParts[0].trim();
-              so = fasoParts[1].trim();
-            } else {
-              var soIndex = fasoVal.indexOf('SOUNI');
-              if (soIndex !== -1) {
-                fa = fasoVal.substring(0, soIndex).trim();
-                so = fasoVal.substring(soIndex).trim();
-              } else {
-                fa = fasoVal;
-              }
-            }
-          }
+          // Ignore empty rows (Column H is EU Name / index 7, Column L is Subscription Name / index 11)
+          if (!rowVal[7] && !rowVal[11]) continue;
 
           records.push({
             rowNum: rowNum,
             month: String(rowVal[0] || '').trim(),
             status: String(rowVal[1] || '').trim(),
             poStatus: String(rowVal[2] || '').trim(),
-            monthsLeft: monthsLeft.trim(),
-            totalMonths: totalMonths.trim(),
-            startDate: startDate,
-            endDate: endDate,
-            eu: String(rowVal[5] || '').trim(),
-            fa: fa.trim(),
-            so: so.trim(),
-            subId: String(rowVal[7] || '').trim(),
-            subscription: String(rowVal[8] || '').trim()
+            monthsLeft: String(rowVal[3] !== null && rowVal[3] !== undefined ? rowVal[3] : '').trim(),
+            totalMonths: String(rowVal[4] !== null && rowVal[4] !== undefined ? rowVal[4] : '').trim(),
+            startDate: parseExcelDate(rowVal[5], rowText[5]),
+            endDate: parseExcelDate(rowVal[6], rowText[6]),
+            eu: String(rowVal[7] || '').trim(),
+            fa: String(rowVal[8] || '').trim(),
+            so: String(rowVal[9] || '').trim(),
+            subId: String(rowVal[10] || '').trim(),
+            subscription: String(rowVal[11] || '').trim()
           });
         } else {
           // Annual
@@ -508,7 +475,7 @@ async function saveRecord(e) {
 
       if (rowNum) {
         // Edit existing
-        var colLetter = currentListType === 'monthly' ? "I" : "F";
+        var colLetter = currentListType === 'monthly' ? "L" : "F";
         range = sheet.getRange("A" + rowNum + ":" + colLetter + rowNum);
       } else {
         // Append at end
@@ -519,37 +486,28 @@ async function saveRecord(e) {
         
         var nextRow = lastRowRange.rowIndex + 2; // Index is 0-based
         if (nextRow < startRow) nextRow = startRow;
-        var colLetter = currentListType === 'monthly' ? "I" : "F";
+        var colLetter = currentListType === 'monthly' ? "L" : "F";
         range = sheet.getRange("A" + nextRow + ":" + colLetter + nextRow);
       }
 
       if (currentListType === 'monthly') {
-        var left = formData.monthsLeft ? String(formData.monthsLeft).trim() : '0';
-        var total = formData.totalMonths ? String(formData.totalMonths).trim() : '0';
-        var rt = left + "/" + total;
-
-        var startStr = formatDateDDMMMYYJS(formData.startDate);
-        var endStr = formatDateDDMMMYYJS(formData.endDate);
-        var period = startStr + (endStr ? "  " + endStr : "");
-
-        var faStr = String(formData.fa || '').trim();
-        var soStr = String(formData.so || '').trim();
-        var faso = faStr + (faStr && soStr ? "  " : "") + soStr;
-
-        range.numberFormat = "@";
+        range.numberFormat = [["@", "@", "@", "General", "General", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "@", "@", "@", "@", "@"]];
         range.values = [[
           formData.month,
           formData.status,
           formData.poStatus,
-          rt,
-          period,
+          formData.monthsLeft ? parseInt(formData.monthsLeft, 10) : 0,
+          formData.totalMonths ? parseInt(formData.totalMonths, 10) : 0,
+          formData.startDate || "",
+          formData.endDate || "",
           formData.eu,
-          faso,
+          formData.fa,
+          formData.so,
           formData.subId,
           formData.subscription
         ]];
       } else {
-        range.numberFormat = [["@", "yyyy-mm-dd", "yyyy-mm-dd", "@", "@", "@"]];
+        range.numberFormat = [["@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "@", "@", "@"]];
         range.values = [[
           formData.status,
           formData.startDate,
@@ -660,7 +618,6 @@ async function sortSubscriptions() {
       if (lastRowIndex < startRow) return;
 
       var values;
-      var isNeedRestructure = false;
 
       if (currentListType === 'monthly') {
         var headerRange = sheet.getRange("A3:L3");
@@ -669,20 +626,22 @@ async function sortSubscriptions() {
 
         var headerValues = headerRange.values[0];
         var colBHeader = String(headerValues[1] || '').trim().toUpperCase();
+        var colCHeader = String(headerValues[2] || '').trim().toUpperCase();
         var colDHeader = String(headerValues[3] || '').trim().toUpperCase();
 
-        var isOld10Column = (colBHeader === "MONTHS LEFT");
-        var isOld12Column = (colBHeader === "STATUS" && colDHeader === "MONTHS LEFT");
+        var is12Column = (colBHeader === "STATUS" && colDHeader === "MONTHS LEFT");
+        var is10Column = (colBHeader === "MONTHS LEFT");
+        var is9Column = (colBHeader === "STATUS" && colDHeader === "R/T");
 
-        if (isOld10Column || isOld12Column) {
+        if (is10Column || is9Column) {
           var oldValues;
-          if (isOld10Column) {
+          if (is10Column) {
             var oldRange = sheet.getRange("A4:J" + lastRowIndex);
             oldRange.load("values");
             await context.sync();
             oldValues = oldRange.values;
           } else {
-            var oldRange = sheet.getRange("A4:L" + lastRowIndex);
+            var oldRange = sheet.getRange("A4:I" + lastRowIndex);
             oldRange.load("values");
             await context.sync();
             oldValues = oldRange.values;
@@ -690,13 +649,13 @@ async function sortSubscriptions() {
 
           var restructuredValues = [];
           for (var i = 0; i < oldValues.length; i++) {
-            var month, status, poStatus;
-            var monthsLeft, totalMonths;
-            var startDate, endDate;
-            var eu, fa, so;
-            var subId, subName;
+            var month = "", status = "", poStatus = "";
+            var monthsLeft = 0, totalMonths = 0;
+            var startDate = "", endDate = "";
+            var eu = "", fa = "", so = "";
+            var subId = "", subName = "";
 
-            if (isOld10Column) {
+            if (is10Column) {
               var rawStatus = oldValues[i][0];
               monthsLeft = oldValues[i][1];
               totalMonths = oldValues[i][2];
@@ -713,48 +672,63 @@ async function sortSubscriptions() {
               status = parsed.status;
               poStatus = parsed.poStatus;
             } else {
+              // 9-column layout
               month = oldValues[i][0];
               status = oldValues[i][1];
               poStatus = oldValues[i][2];
-              monthsLeft = oldValues[i][3];
-              totalMonths = oldValues[i][4];
-              startDate = oldValues[i][5];
-              endDate = oldValues[i][6];
-              eu = oldValues[i][7];
-              fa = oldValues[i][8];
-              so = oldValues[i][9];
-              subId = oldValues[i][10];
-              subName = oldValues[i][11];
+              
+              var rt = cleanRTValueJS(oldValues[i][3]);
+              var rtParts = rt.split('/');
+              monthsLeft = rtParts[0] ? parseInt(rtParts[0].trim(), 10) : 0;
+              totalMonths = rtParts[1] ? parseInt(rtParts[1].trim(), 10) : 0;
+
+              var period = cleanPeriodValueJS(oldValues[i][4]);
+              var periodParts = period.trim().split(/\s+/);
+              var startStr = periodParts[0] || '';
+              var endStr = periodParts[1] || '';
+              startDate = parseDDMMMYY(startStr);
+              endDate = parseDDMMMYY(endStr);
+
+              eu = oldValues[i][5];
+
+              var faso = String(oldValues[i][6] || '').trim();
+              var fasoParts = faso.split(/\s{2,}/);
+              if (fasoParts.length >= 2) {
+                fa = fasoParts[0].trim();
+                so = fasoParts[1].trim();
+              } else {
+                var soIndex = faso.indexOf('SOUNI');
+                if (soIndex !== -1) {
+                  fa = faso.substring(0, soIndex).trim();
+                  so = faso.substring(soIndex).trim();
+                } else {
+                  fa = faso;
+                }
+              }
+
+              subId = oldValues[i][7];
+              subName = oldValues[i][8];
             }
-
-            var left = monthsLeft !== null && monthsLeft !== "" ? String(monthsLeft).trim() : "0";
-            var total = totalMonths !== null && totalMonths !== "" ? String(totalMonths).trim() : "0";
-            var rt = left + "/" + total;
-
-            var startStr = formatDateDDMMMYYJS(startDate);
-            var endStr = formatDateDDMMMYYJS(endDate);
-            var period = startStr + (endStr ? "  " + endStr : "");
-
-            var faStr = String(fa || '').trim();
-            var soStr = String(so || '').trim();
-            var faso = faStr + (faStr && soStr ? "  " : "") + soStr;
 
             restructuredValues.push([
               month,
               status,
               poStatus,
-              rt,
-              period,
+              monthsLeft,
+              totalMonths,
+              startDate,
+              endDate,
               eu,
-              faso,
+              fa,
+              so,
               subId,
               subName
             ]);
           }
 
           var newHeaders = [
-            "MONTH", "STATUS", "PO STATUS", "R/T", "Period",
-            "EU", "FA/SO", "SUBSCRIPTION ID", "SUBSCRIPTION"
+            "MONTH", "STATUS", "PO STATUS", "MONTHS LEFT", "TOTAL MONTHS",
+            "START DATE", "END DATE", "EU", "FA", "SO", "SUBSCRIPTION ID", "SUBSCRIPTION"
           ];
           
           // Clear columns A to L below header (contents, formats, validation) to remove date formats
@@ -766,40 +740,29 @@ async function sortSubscriptions() {
           clearRangeHeader.clear(Excel.ClearApplyTo.contents);
           await context.sync();
 
-          var newHeaderRange = sheet.getRange("A3:I3");
+          var newHeaderRange = sheet.getRange("A3:L3");
           newHeaderRange.values = [newHeaders];
           await context.sync();
 
-          var setCommentJS = async function(cell, text) {
+          // Delete comments/notes from headers (D3, E3, G3)
+          var deleteCommentJS = async function(cell) {
             try {
               var existing = context.workbook.comments.getItemByCell(cell);
               existing.delete();
               await context.sync();
             } catch (e) {}
-            try {
-              context.workbook.comments.add(cell, text);
-              await context.sync();
-            } catch (e) {}
           };
-          
-          await setCommentJS(sheet.getRange("D3"), "R/T = Remaining Months / Total Months");
-          await setCommentJS(sheet.getRange("E3"), "Period = Start Date  End Date");
-          await setCommentJS(sheet.getRange("G3"), "FA/SO = Financial Advisor  Sales Officer");
+          await deleteCommentJS(sheet.getRange("D3"));
+          await deleteCommentJS(sheet.getRange("E3"));
+          await deleteCommentJS(sheet.getRange("G3"));
 
           values = restructuredValues;
         } else {
-          var range = sheet.getRange("A4:I" + lastRowIndex);
+          var range = sheet.getRange("A4:L" + lastRowIndex);
           range.load("values");
           await context.sync();
           values = range.values;
         }
-
-        // Heal values (clean R/T and Period columns if Excel auto-converted them to dates)
-        for (var i = 0; i < values.length; i++) {
-          values[i][3] = cleanRTValueJS(values[i][3]);
-          values[i][4] = cleanPeriodValueJS(values[i][4]);
-        }
-
       } else {
         // Annual Master
         var range = sheet.getRange("A" + startRow + ":F" + lastRowIndex);
@@ -856,18 +819,25 @@ async function sortSubscriptions() {
           var weightStatusB = statusWeights[statusB] || 5;
           if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
 
-          // 2. Start Date (Index 4) - Descending
-          var timeA = getTimeFromPeriodJS(a[4]);
-          var timeB = getTimeFromPeriodJS(b[4]);
+          var getTime = function(val) {
+            if (typeof val === 'number') return val;
+            if (!val) return 0;
+            var parsed = new Date(val).getTime();
+            return isNaN(parsed) ? 0 : parsed;
+          };
+
+          // 2. Start Date (Index 5) - Descending
+          var timeA = getTime(a[5]);
+          var timeB = getTime(b[5]);
           if (timeA !== timeB) {
             if (timeA === 0) return 1;
             if (timeB === 0) return -1;
             return timeB - timeA;
           }
           
-          // 3. EU Name (Index 5)
-          var nameA = String(a[5] || '').trim().toLowerCase();
-          var nameB = String(b[5] || '').trim().toLowerCase();
+          // 3. EU Name (Index 7)
+          var nameA = String(a[7] || '').trim().toLowerCase();
+          var nameB = String(b[7] || '').trim().toLowerCase();
           return nameA.localeCompare(nameB);
         } else {
           // Annual
@@ -902,19 +872,22 @@ async function sortSubscriptions() {
       });
 
       // Overwrite cells
-      var colLetter = currentListType === 'monthly' ? "I" : "F";
-      var writeRange = sheet.getRange("A" + startRow + ":" + colLetter + lastRowIndex);
-      writeRange.values = values;
-      await context.sync();
+      var colLetter = currentListType === 'monthly' ? "L" : "F";
 
       if (currentListType === 'monthly') {
-        // Clear any existing validations in columns B, C, D up to row 10000
-        var clearValRange = sheet.getRange("B4:D10000");
+        // Clear any existing validations in columns A to L
+        var clearValRange = sheet.getRange("A4:L10000");
         clearValRange.dataValidation.clear();
 
-        // Set number format of columns A to I to Text to prevent date auto-conversion
-        var numFormatRange = sheet.getRange("A4:I10000");
-        numFormatRange.numberFormat = "@";
+        // Set number formats BEFORE writing values to prevent Excel date auto-conversion
+        var textRangeAC = sheet.getRange("A4:C10000");
+        textRangeAC.numberFormat = "@";
+        var numRangeDE = sheet.getRange("D4:E10000");
+        numRangeDE.numberFormat = "General";
+        var dateRangeFG = sheet.getRange("F4:G10000");
+        dateRangeFG.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
+        var textRangeHL = sheet.getRange("H4:L10000");
+        textRangeHL.numberFormat = "@";
         await context.sync();
 
         if (lastRowIndex >= 4) {
@@ -943,16 +916,16 @@ async function sortSubscriptions() {
           await context.sync();
         }
       } else {
-        // Annual Master: Set number formats
-        var dateRange = sheet.getRange("B5:C10000");
-        dateRange.numberFormat = "yyyy-mm-dd";
+        // Annual Master
+        // Set number formats BEFORE writing values to prevent Excel date auto-conversion
         var textRangeA = sheet.getRange("A5:A10000");
         textRangeA.numberFormat = "@";
+        var dateRangeBC = sheet.getRange("B5:C10000");
+        dateRangeBC.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
         var textRangeDF = sheet.getRange("D5:F10000");
         textRangeDF.numberFormat = "@";
         await context.sync();
 
-        // Clear everything below active rows
         if (lastRowIndex < 10000) {
           var clearBelowRange = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
           clearBelowRange.clear(Excel.ClearApplyTo.all);
@@ -960,6 +933,10 @@ async function sortSubscriptions() {
         }
       }
       
+      var writeRange = sheet.getRange("A" + startRow + ":" + colLetter + lastRowIndex);
+      writeRange.values = values;
+      await context.sync();
+
       // Re-apply background colors
       await formatSheetColorsDirect(sheet, values);
     });
@@ -977,7 +954,7 @@ async function formatSheetColorsDirect(sheet, values) {
   var colorDefault = '#ffffff';    // White
 
   var startRow = currentListType === 'monthly' ? 4 : 5;
-  var colLetter = currentListType === 'monthly' ? "I" : "F";
+  var colLetter = currentListType === 'monthly' ? "L" : "F";
 
   for (var i = 0; i < values.length; i++) {
     var status = currentListType === 'monthly'
