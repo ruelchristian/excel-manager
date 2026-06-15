@@ -158,6 +158,16 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     values = sheet.getRange("A4:L" + lastRowIndex).getValues();
   }
 
+  // Filter out empty rows (where EU Name (index 7) and Subscription (index 11) are both blank)
+  values = values.filter(row => {
+    let eu = String(row[7] || '').trim();
+    let sub = String(row[11] || '').trim();
+    return eu !== '' || sub !== '';
+  });
+
+  let activeRowCount = values.length;
+  let newLastRowIndex = activeRowCount >= 1 ? 3 + activeRowCount : 3;
+
   let statusWeights: { [key: string]: number } = {
     'new': 1,
     'renewal': 2,
@@ -202,38 +212,38 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   sheet.getRange("F4:G10000").setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
   sheet.getRange("H4:L10000").setNumberFormatLocal("@");
 
-  let writeRange = sheet.getRange("A4:L" + lastRowIndex);
-  writeRange.setValues(values);
-  
-  let colorNew = '#fef08a';        // Soft Yellow
-  let colorRenewal = '#bbf7d0';    // Soft Green
-  let colorComplete = '#bfdbfe';   // Soft Blue
-  let colorCancelled = '#fecaca';  // Soft Red
-  let colorDefault = '#ffffff';    // White
-  
-  for (let i = 0; i < values.length; i++) {
-    let status = String(values[i][1] || '').trim().toLowerCase();
-    let rowColor = colorDefault;
-    
-    if (status === 'new') {
-      rowColor = colorNew;
-    } else if (status === 'renewal') {
-      rowColor = colorRenewal;
-    } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
-      rowColor = colorComplete;
-    } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
-      rowColor = colorCancelled;
-    }
-    
-    let rowRange = sheet.getRange("A" + (i + 4) + ":L" + (i + 4));
-    rowRange.getFormat().getFill().setColor(rowColor);
-  }
-
   // Clear any existing validations in columns A to L
   sheet.getRange("A4:L10000").getDataValidation().clear();
 
-  if (lastRowIndex >= 4) {
-    let statusRange = sheet.getRange("B4:B" + lastRowIndex);
+  if (activeRowCount > 0) {
+    let writeRange = sheet.getRange("A4:L" + newLastRowIndex);
+    writeRange.setValues(values);
+    
+    let colorNew = '#fef08a';        // Soft Yellow
+    let colorRenewal = '#bbf7d0';    // Soft Green
+    let colorComplete = '#bfdbfe';   // Soft Blue
+    let colorCancelled = '#fecaca';  // Soft Red
+    let colorDefault = '#ffffff';    // White
+    
+    for (let i = 0; i < values.length; i++) {
+      let status = String(values[i][1] || '').trim().toLowerCase();
+      let rowColor = colorDefault;
+      
+      if (status === 'new') {
+        rowColor = colorNew;
+      } else if (status === 'renewal') {
+        rowColor = colorRenewal;
+      } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
+        rowColor = colorComplete;
+      } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
+        rowColor = colorCancelled;
+      }
+      
+      let rowRange = sheet.getRange("A" + (i + 4) + ":L" + (i + 4));
+      rowRange.getFormat().getFill().setColor(rowColor);
+    }
+
+    let statusRange = sheet.getRange("B4:B" + newLastRowIndex);
     statusRange.getDataValidation().setRule({
       list: {
         inCellDropDown: true,
@@ -241,7 +251,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
       }
     });
 
-    let poRange = sheet.getRange("C4:C" + lastRowIndex);
+    let poRange = sheet.getRange("C4:C" + newLastRowIndex);
     poRange.getDataValidation().setRule({
       list: {
         inCellDropDown: true,
@@ -251,10 +261,8 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   }
 
   // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
-  if (lastRowIndex < 10000) {
-    let clearRangeBelow = sheet.getRange("A" + (lastRowIndex + 1) + ":L10000");
-    clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
-  }
+  let clearRangeBelow = sheet.getRange("A" + (newLastRowIndex + 1) + ":L10000");
+  clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
 
   // Format the header/title row A3:L3 with Orange color and bold font
   let headerRange = sheet.getRange("A3:L3");
@@ -409,6 +417,16 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   
   let range = sheet.getRange("A5:F" + lastRowIndex);
   let values = range.getValues();
+
+  // Filter out empty rows (where EU Name (index 3) and Subscription (index 5) are both blank)
+  values = values.filter(row => {
+    let eu = String(row[3] || '').trim();
+    let sub = String(row[5] || '').trim();
+    return eu !== '' || sub !== '';
+  });
+
+  let activeRowCount = values.length;
+  let newLastRowIndex = activeRowCount >= 1 ? 4 + activeRowCount : 4;
   
   // Clean up and standardize statuses in memory
   for (let i = 0; i < values.length; i++) {
@@ -479,39 +497,40 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     return nameA.localeCompare(nameB);
   });
   
-  range.setValues(values);
-  
-  let colorActive = '#fef08a';       // Soft Yellow
-  let colorComplete = '#bfdbfe';     // Soft Blue
-  let colorCancelled = '#fecaca';    // Soft Red
-  let colorDefault = '#ffffff';
-  
-  for (let i = 0; i < values.length; i++) {
-    let status = String(values[i][0] || '').trim().toLowerCase();
-    let rowColor = colorDefault;
-    
-    if (status === 'active' || status.indexOf('active') !== -1) {
-      rowColor = colorActive;
-    } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
-      rowColor = colorComplete;
-    } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
-      rowColor = colorCancelled;
-    }
-    
-    let rowRange = sheet.getRange("A" + (i + 5) + ":F" + (i + 5));
-    rowRange.getFormat().getFill().setColor(rowColor);
-  }
-
-  // Set number formats for dates and text in Annual sheet
+  // Set number formats for dates and text in Annual sheet BEFORE writing values
   sheet.getRange("B5:C10000").setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
   sheet.getRange("A5:A10000").setNumberFormatLocal("@");
   sheet.getRange("D5:F10000").setNumberFormatLocal("@");
 
-  // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
-  if (lastRowIndex < 10000) {
-    let clearRangeBelow = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
-    clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
+  if (activeRowCount > 0) {
+    let writeRange = sheet.getRange("A5:F" + newLastRowIndex);
+    writeRange.setValues(values);
+    
+    let colorActive = '#fef08a';       // Soft Yellow
+    let colorComplete = '#bfdbfe';     // Soft Blue
+    let colorCancelled = '#fecaca';    // Soft Red
+    let colorDefault = '#ffffff';
+    
+    for (let i = 0; i < values.length; i++) {
+      let status = String(values[i][0] || '').trim().toLowerCase();
+      let rowColor = colorDefault;
+      
+      if (status === 'active' || status.indexOf('active') !== -1) {
+        rowColor = colorActive;
+      } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
+        rowColor = colorComplete;
+      } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
+        rowColor = colorCancelled;
+      }
+      
+      let rowRange = sheet.getRange("A" + (i + 5) + ":F" + (i + 5));
+      rowRange.getFormat().getFill().setColor(rowColor);
+    }
   }
+
+  // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
+  let clearRangeBelow = sheet.getRange("A" + (newLastRowIndex + 1) + ":F10000");
+  clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
 
   // Format the header/title row A4:F4 with Orange color and bold font
   let headerRange = sheet.getRange("A4:F4");

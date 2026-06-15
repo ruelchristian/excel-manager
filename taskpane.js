@@ -618,6 +618,8 @@ async function sortSubscriptions() {
       if (lastRowIndex < startRow) return;
 
       var values;
+      var activeRowCount = 0;
+      var newLastRowIndex = startRow;
 
       if (currentListType === 'monthly') {
         var headerRange = sheet.getRange("A3:L3");
@@ -763,12 +765,28 @@ async function sortSubscriptions() {
           await context.sync();
           values = range.values;
         }
+
+        values = values.filter(function(row) {
+          var eu = String(row[7] || '').trim();
+          var sub = String(row[11] || '').trim();
+          return eu !== '' || sub !== '';
+        });
+        activeRowCount = values.length;
+        newLastRowIndex = activeRowCount >= 1 ? 3 + activeRowCount : 3;
       } else {
         // Annual Master
         var range = sheet.getRange("A" + startRow + ":F" + lastRowIndex);
         range.load("values");
         await context.sync();
         values = range.values;
+
+        values = values.filter(function(row) {
+          var eu = String(row[3] || '').trim();
+          var sub = String(row[5] || '').trim();
+          return eu !== '' || sub !== '';
+        });
+        activeRowCount = values.length;
+        newLastRowIndex = activeRowCount >= 1 ? 4 + activeRowCount : 4;
 
         // Clean up and standardize statuses in memory for Annual Master
         for (var i = 0; i < values.length; i++) {
@@ -890,8 +908,8 @@ async function sortSubscriptions() {
         textRangeHL.numberFormat = "@";
         await context.sync();
 
-        if (lastRowIndex >= 4) {
-          var statusRange = sheet.getRange("B4:B" + lastRowIndex);
+        if (activeRowCount > 0) {
+          var statusRange = sheet.getRange("B4:B" + newLastRowIndex);
           statusRange.dataValidation.rule = {
             list: {
               inCellDropDown: true,
@@ -899,7 +917,7 @@ async function sortSubscriptions() {
             }
           };
           
-          var poRange = sheet.getRange("C4:C" + lastRowIndex);
+          var poRange = sheet.getRange("C4:C" + newLastRowIndex);
           poRange.dataValidation.rule = {
             list: {
               inCellDropDown: true,
@@ -910,8 +928,8 @@ async function sortSubscriptions() {
         }
 
         // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
-        if (lastRowIndex < 10000) {
-          var clearBelowRange = sheet.getRange("A" + (lastRowIndex + 1) + ":L10000");
+        if (newLastRowIndex < 10000) {
+          var clearBelowRange = sheet.getRange("A" + (newLastRowIndex + 1) + ":L10000");
           clearBelowRange.clear(Excel.ClearApplyTo.all);
           await context.sync();
         }
@@ -926,19 +944,21 @@ async function sortSubscriptions() {
         textRangeDF.numberFormat = "@";
         await context.sync();
 
-        if (lastRowIndex < 10000) {
-          var clearBelowRange = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
+        if (newLastRowIndex < 10000) {
+          var clearBelowRange = sheet.getRange("A" + (newLastRowIndex + 1) + ":F10000");
           clearBelowRange.clear(Excel.ClearApplyTo.all);
           await context.sync();
         }
       }
       
-      var writeRange = sheet.getRange("A" + startRow + ":" + colLetter + lastRowIndex);
-      writeRange.values = values;
-      await context.sync();
+      if (activeRowCount > 0) {
+        var writeRange = sheet.getRange("A" + startRow + ":" + colLetter + newLastRowIndex);
+        writeRange.values = values;
+        await context.sync();
 
-      // Re-apply background colors
-      await formatSheetColorsDirect(sheet, values);
+        // Re-apply background colors
+        await formatSheetColorsDirect(sheet, values);
+      }
     });
   } catch (err) {
     showError("Sorting failed: " + err.message);
