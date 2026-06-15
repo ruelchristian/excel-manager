@@ -204,6 +204,33 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     let rowRange = sheet.getRange("A" + (i + 4) + ":I" + (i + 4));
     rowRange.getFormat().getFill().setColor(rowColor);
   }
+
+  // Clear any existing validations in columns B, C, D first
+  sheet.getRange("B4:D10000").getDataValidation().clear();
+
+  if (lastRowIndex >= 4) {
+    let statusRange = sheet.getRange("B4:B" + lastRowIndex);
+    statusRange.getDataValidation().setRule({
+      list: {
+        inCellDropDown: true,
+        source: "New,Renewal,Complete,Cancelled"
+      }
+    });
+
+    let poRange = sheet.getRange("C4:C" + lastRowIndex);
+    poRange.getDataValidation().setRule({
+      list: {
+        inCellDropDown: true,
+        source: "PO Done,PO Pending"
+      }
+    });
+  }
+
+  // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
+  if (lastRowIndex < 10000) {
+    let clearRangeBelow = sheet.getRange("A" + (lastRowIndex + 1) + ":L10000");
+    clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
+  }
   
   console.log("Monthly Master sheet sorted and colored successfully.");
 }
@@ -441,6 +468,12 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     
     let rowRange = sheet.getRange("A" + (i + 5) + ":F" + (i + 5));
     rowRange.getFormat().getFill().setColor(rowColor);
+  }
+
+  // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
+  if (lastRowIndex < 10000) {
+    let clearRangeBelow = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
+    clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
   }
   
   console.log("Annual Master sheet sorted and colored successfully.");

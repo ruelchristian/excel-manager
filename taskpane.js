@@ -895,6 +895,46 @@ async function sortSubscriptions() {
       var writeRange = sheet.getRange("A" + startRow + ":" + colLetter + lastRowIndex);
       writeRange.values = values;
       await context.sync();
+
+      if (currentListType === 'monthly') {
+        // Clear any existing validations in columns B, C, D up to row 10000
+        var clearValRange = sheet.getRange("B4:D10000");
+        clearValRange.dataValidation.clear();
+        await context.sync();
+
+        if (lastRowIndex >= 4) {
+          var statusRange = sheet.getRange("B4:B" + lastRowIndex);
+          statusRange.dataValidation.rule = {
+            list: {
+              inCellDropDown: true,
+              source: "New,Renewal,Complete,Cancelled"
+            }
+          };
+          
+          var poRange = sheet.getRange("C4:C" + lastRowIndex);
+          poRange.dataValidation.rule = {
+            list: {
+              inCellDropDown: true,
+              source: "PO Done,PO Pending"
+            }
+          };
+          await context.sync();
+        }
+
+        // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
+        if (lastRowIndex < 10000) {
+          var clearBelowRange = sheet.getRange("A" + (lastRowIndex + 1) + ":L10000");
+          clearBelowRange.clear(Excel.ClearApplyTo.all);
+          await context.sync();
+        }
+      } else {
+        // Annual Master: Clear everything below the active rows
+        if (lastRowIndex < 10000) {
+          var clearBelowRange = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
+          clearBelowRange.clear(Excel.ClearApplyTo.all);
+          await context.sync();
+        }
+      }
       
       // Re-apply background colors
       await formatSheetColorsDirect(sheet, values);
