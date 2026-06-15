@@ -208,6 +208,10 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   // Clear any existing validations in columns B, C, D first
   sheet.getRange("B4:D10000").getDataValidation().clear();
 
+  // Set number format of all columns (A to I) to Text to prevent Excel from converting R/T and Period to dates
+  sheet.getRange("A4:I10000").setNumberFormatLocal("@");
+
+
   if (lastRowIndex >= 4) {
     let statusRange = sheet.getRange("B4:B" + lastRowIndex);
     statusRange.getDataValidation().setRule({
@@ -469,6 +473,11 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     let rowRange = sheet.getRange("A" + (i + 5) + ":F" + (i + 5));
     rowRange.getFormat().getFill().setColor(rowColor);
   }
+
+  // Set number formats for dates and text in Annual sheet
+  sheet.getRange("B5:C10000").setNumberFormatLocal("yyyy-mm-dd");
+  sheet.getRange("A5:A10000").setNumberFormatLocal("@");
+  sheet.getRange("D5:F10000").setNumberFormatLocal("@");
 
   // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
   if (lastRowIndex < 10000) {

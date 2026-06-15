@@ -536,6 +536,7 @@ async function saveRecord(e) {
         var soStr = String(formData.so || '').trim();
         var faso = faStr + (faStr && soStr ? "  " : "") + soStr;
 
+        range.numberFormat = "@";
         range.values = [[
           formData.month,
           formData.status,
@@ -548,6 +549,7 @@ async function saveRecord(e) {
           formData.subscription
         ]];
       } else {
+        range.numberFormat = [["@", "yyyy-mm-dd", "yyyy-mm-dd", "@", "@", "@"]];
         range.values = [[
           formData.status,
           formData.startDate,
@@ -556,9 +558,6 @@ async function saveRecord(e) {
           formData.fa_so,
           formData.subscription
         ]];
-        
-        var colB_C = range.getCell(0, 1).getResizedRange(0, 1);
-        colB_C.numberFormat = [["yyyy-mm-dd", "yyyy-mm-dd"]];
       }
 
       await context.sync();
@@ -900,6 +899,10 @@ async function sortSubscriptions() {
         // Clear any existing validations in columns B, C, D up to row 10000
         var clearValRange = sheet.getRange("B4:D10000");
         clearValRange.dataValidation.clear();
+
+        // Set number format of columns A to I to Text to prevent date auto-conversion
+        var numFormatRange = sheet.getRange("A4:I10000");
+        numFormatRange.numberFormat = "@";
         await context.sync();
 
         if (lastRowIndex >= 4) {
@@ -928,7 +931,16 @@ async function sortSubscriptions() {
           await context.sync();
         }
       } else {
-        // Annual Master: Clear everything below the active rows
+        // Annual Master: Set number formats
+        var dateRange = sheet.getRange("B5:C10000");
+        dateRange.numberFormat = "yyyy-mm-dd";
+        var textRangeA = sheet.getRange("A5:A10000");
+        textRangeA.numberFormat = "@";
+        var textRangeDF = sheet.getRange("D5:F10000");
+        textRangeDF.numberFormat = "@";
+        await context.sync();
+
+        // Clear everything below active rows
         if (lastRowIndex < 10000) {
           var clearBelowRange = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
           clearBelowRange.clear(Excel.ClearApplyTo.all);
