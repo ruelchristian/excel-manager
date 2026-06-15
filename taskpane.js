@@ -757,8 +757,13 @@ async function sortSubscriptions() {
             "EU", "FA/SO", "SUBSCRIPTION ID", "SUBSCRIPTION"
           ];
           
-          var clearRange = sheet.getRange("A3:L" + lastRowIndex);
-          clearRange.clear(Excel.ClearApplyTo.contents);
+          // Clear columns A to L below header (contents, formats, validation) to remove date formats
+          var clearRangeData = sheet.getRange("A4:L" + lastRowIndex);
+          clearRangeData.clear(Excel.ClearApplyTo.all);
+          
+          // Clear header contents only (preserving header style)
+          var clearRangeHeader = sheet.getRange("A3:L3");
+          clearRangeHeader.clear(Excel.ClearApplyTo.contents);
           await context.sync();
 
           var newHeaderRange = sheet.getRange("A3:I3");
@@ -788,6 +793,13 @@ async function sortSubscriptions() {
           await context.sync();
           values = range.values;
         }
+
+        // Heal values (clean R/T and Period columns if Excel auto-converted them to dates)
+        for (var i = 0; i < values.length; i++) {
+          values[i][3] = cleanRTValueJS(values[i][3]);
+          values[i][4] = cleanPeriodValueJS(values[i][4]);
+        }
+
       } else {
         // Annual Master
         var range = sheet.getRange("A" + startRow + ":F" + lastRowIndex);
@@ -1750,4 +1762,58 @@ function parseDDMMMYY(str) {
 
   return clean;
 }
+
+// Helper to clean and heal R/T values if Excel auto-converted them to dates
+function cleanRTValueJS(val) {
+  if (val === null || val === undefined) return "0/0";
+  var str = String(val).trim();
+  if (!str) return "0/0";
+
+  // If it's already in the format "X/Y"
+  if (/^\d+\/\d+$/.test(str)) {
+    return str;
+  }
+
+  var d;
+  if (typeof val === 'number') {
+    d = new Date(Math.round((val - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(val);
+  }
+
+  if (!isNaN(d.getTime())) {
+    // Reconstruct Remaining/Total from Month/Day
+    var monthsLeft = d.getUTCMonth() + 1;
+    var totalMonths = d.getUTCDate();
+    return monthsLeft + "/" + totalMonths;
+  }
+
+  return str;
+}
+
+// Helper to clean and heal Period values if Excel auto-converted them to dates
+function cleanPeriodValueJS(val) {
+  if (val === null || val === undefined) return "";
+  var str = String(val).trim();
+  if (!str) return "";
+
+  // If it already contains two spaces
+  if (str.indexOf('  ') !== -1) {
+    return str;
+  }
+
+  var d;
+  if (typeof val === 'number') {
+    d = new Date(Math.round((val - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(val);
+  }
+
+  if (!isNaN(d.getTime())) {
+    return formatDateDDMMMYYJS(val);
+  }
+
+  return str;
+}
+
 

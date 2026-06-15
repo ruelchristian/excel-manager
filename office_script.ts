@@ -120,9 +120,13 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
       "MONTH", "STATUS", "PO STATUS", "R/T", "Period",
       "EU", "FA/SO", "SUBSCRIPTION ID", "SUBSCRIPTION"
     ];
-    // Clear columns A to L to avoid legacy data artifacts
-    let clearRange = sheet.getRange("A3:L" + lastRowIndex);
-    clearRange.clear(ExcelScript.ClearApplyTo.contents);
+    // Clear columns A to L below header (contents, formats, validation) to remove date formats
+    let clearRangeData = sheet.getRange("A4:L" + lastRowIndex);
+    clearRangeData.clear(ExcelScript.ClearApplyTo.all);
+
+    // Clear header contents only (preserving header style)
+    let clearRangeHeader = sheet.getRange("A3:L3");
+    clearRangeHeader.clear(ExcelScript.ClearApplyTo.contents);
 
     // Set new headers
     let newHeaderRange = sheet.getRange("A3:I3");
@@ -146,6 +150,13 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     let range = sheet.getRange("A4:I" + lastRowIndex);
     values = range.getValues();
   }
+
+  // Heal values (clean R/T and Period columns if Excel auto-converted them to dates)
+  for (let i = 0; i < values.length; i++) {
+    values[i][3] = cleanRTValue(values[i][3]);
+    values[i][4] = cleanPeriodValue(values[i][4]);
+  }
+
   
   let statusWeights: { [key: string]: number } = {
     'new': 1,
@@ -487,3 +498,56 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   
   console.log("Annual Master sheet sorted and colored successfully.");
 }
+
+function cleanRTValue(val: any): string {
+  if (val === null || val === undefined) return "0/0";
+  let str = String(val).trim();
+  if (!str) return "0/0";
+
+  // If it's already in the format "X/Y"
+  if (/^\d+\/\d+$/.test(str)) {
+    return str;
+  }
+
+  // If it's a number (Excel serial number) or a Date object
+  let d: Date;
+  if (typeof val === 'number') {
+    d = new Date(Math.round((val - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(val);
+  }
+
+  if (!isNaN(d.getTime())) {
+    // Reconstruct Remaining/Total from Month/Day of parsed date
+    let monthsLeft = d.getUTCMonth() + 1;
+    let totalMonths = d.getUTCDate();
+    return `${monthsLeft}/${totalMonths}`;
+  }
+
+  return str;
+}
+
+function cleanPeriodValue(val: any): string {
+  if (val === null || val === undefined) return "";
+  let str = String(val).trim();
+  if (!str) return "";
+
+  // If it already contains two spaces
+  if (str.indexOf('  ') !== -1) {
+    return str;
+  }
+
+  let d: Date;
+  if (typeof val === 'number') {
+    d = new Date(Math.round((val - 25569) * 86400 * 1000));
+  } else {
+    d = new Date(val);
+  }
+
+  if (!isNaN(d.getTime())) {
+    return formatDateDDMMMYY(val);
+  }
+
+  return str;
+}
+
