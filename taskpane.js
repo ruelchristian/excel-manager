@@ -977,6 +977,24 @@ async function formatSheetColorsDirect(sheet, values) {
     var rowRange = sheet.getRange("A" + rowNum + ":" + colLetter + rowNum);
     rowRange.format.fill.color = rowColor;
   }
+
+  // Format header/title row and set alignment to center
+  if (currentListType === 'monthly') {
+    var headerRange = sheet.getRange("A3:L3");
+    headerRange.format.fill.color = "#FFC000";
+    headerRange.format.font.bold = true;
+    
+    var dataRange = sheet.getRange("A3:L10000");
+    dataRange.format.horizontalAlignment = "Center";
+  } else {
+    var headerRange = sheet.getRange("A4:F4");
+    headerRange.format.fill.color = "#FFC000";
+    headerRange.format.font.bold = true;
+    
+    var dataRange = sheet.getRange("A4:F10000");
+    dataRange.format.horizontalAlignment = "Center";
+  }
+
   await sheet.context.sync();
 }
 
@@ -1549,6 +1567,9 @@ async function generateMonthlySheet() {
         formatCancelled.custom.rule.formula = '=$H7="CANCELLED"';
         formatCancelled.custom.format.fill.color = colorCancelled;
         formatCancelled.custom.format.font.color = "#000000";
+        
+        // Set horizontal alignment to Center for columns B to H (headers and data)
+        targetSheet.getRange("B6:H10000").format.horizontalAlignment = "Center";
         
         // Auto-fit columns B to H based only on the table range to prevent sheet titles from making columns wider
         targetSheet.getRange("B6:H" + (6 + rowsToWrite.length)).format.autofitColumns();

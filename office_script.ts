@@ -255,6 +255,14 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     let clearRangeBelow = sheet.getRange("A" + (lastRowIndex + 1) + ":L10000");
     clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
   }
+
+  // Format the header/title row A3:L3 with Orange color and bold font
+  let headerRange = sheet.getRange("A3:L3");
+  headerRange.getFormat().getFill().setColor("#FFC000");
+  headerRange.getFormat().getFont().setBold(true);
+
+  // Set horizontal alignment to Center for the entire range (headers + data)
+  sheet.getRange("A3:L10000").getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
   console.log("Monthly Master sheet sorted and colored successfully.");
 }
@@ -504,6 +512,14 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     let clearRangeBelow = sheet.getRange("A" + (lastRowIndex + 1) + ":F10000");
     clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
   }
+
+  // Format the header/title row A4:F4 with Orange color and bold font
+  let headerRange = sheet.getRange("A4:F4");
+  headerRange.getFormat().getFill().setColor("#FFC000");
+  headerRange.getFormat().getFont().setBold(true);
+
+  // Set horizontal alignment to Center for the entire range (headers + data)
+  sheet.getRange("A4:F10000").getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
   console.log("Annual Master sheet sorted and colored successfully.");
 }
