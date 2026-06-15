@@ -82,10 +82,10 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   
   range.setValues(values);
   
-  let colorNew = '#e8f0fe';        // Soft Blue
-  let colorRenewal = '#f3e8ff';    // Soft Purple
-  let colorComplete = '#e6f4ea';   // Soft Green
-  let colorCancelled = '#fce8e6';  // Soft Red
+  let colorNew = '#fefce8';        // Soft Yellow
+  let colorRenewal = '#f0fdf4';    // Soft Green
+  let colorComplete = '#eff6ff';   // Soft Blue
+  let colorCancelled = '#fef2f2';  // Soft Red
   let colorDefault = '#ffffff';    // White
   
   for (let i = 0; i < values.length; i++) {
@@ -96,7 +96,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
       rowColor = colorNew;
     } else if (status === 'renewal') {
       rowColor = colorRenewal;
-    } else if (status === 'complete' || status.indexOf('complete') !== -1) {
+    } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
       rowColor = colorComplete;
     } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
       rowColor = colorCancelled;
@@ -191,9 +191,9 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   
   range.setValues(values);
   
-  let colorActive = '#e8f0fe';       // Soft Blue
-  let colorComplete = '#e6f4ea';     // Soft Green
-  let colorCancelled = '#fce8e6';    // Soft Red
+  let colorActive = '#fefce8';       // Soft Yellow
+  let colorComplete = '#eff6ff';     // Soft Blue
+  let colorCancelled = '#fef2f2';    // Soft Red
   let colorDefault = '#ffffff';
   
   for (let i = 0; i < values.length; i++) {
@@ -202,7 +202,7 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     
     if (status === 'active' || status.indexOf('active') !== -1) {
       rowColor = colorActive;
-    } else if (status === 'complete' || status.indexOf('complete') !== -1) {
+    } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
       rowColor = colorComplete;
     } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
       rowColor = colorCancelled;

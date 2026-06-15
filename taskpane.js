@@ -247,10 +247,10 @@ function renderList(records) {
       cardClass = 'status-renewal';
       badgeClass = 'badge-renewal';
       statusLabel = 'RENEWAL';
-    } else if (statusLower === 'complete' || statusLower.indexOf('complete') !== -1) {
+    } else if (statusLower === 'complete' || statusLower.indexOf('complete') !== -1 || statusLower === 'closed') {
       cardClass = 'status-completed';
       badgeClass = 'badge-completed';
-      statusLabel = 'COMPLETE';
+      statusLabel = statusLower === 'closed' ? 'CLOSED' : 'COMPLETE';
     } else if (statusLower === 'cancelled' || statusLower.indexOf('cancel') !== -1) {
       cardClass = 'status-cancelled';
       badgeClass = 'badge-cancelled';
@@ -734,10 +734,10 @@ async function sortSubscriptions() {
 
 // Background row pastel coloring helper
 async function formatSheetColorsDirect(sheet, values) {
-  var colorNew = '#e8f0fe';        // Soft Blue
-  var colorRenewal = '#f3e8ff';    // Soft Purple
-  var colorComplete = '#e6f4ea';   // Soft Green
-  var colorCancelled = '#fce8e6';  // Soft Red
+  var colorNew = '#fefce8';        // Soft Yellow
+  var colorRenewal = '#f0fdf4';    // Soft Green
+  var colorComplete = '#eff6ff';   // Soft Blue
+  var colorCancelled = '#fef2f2';  // Soft Red
   var colorDefault = '#ffffff';    // White
 
   var startRow = currentListType === 'monthly' ? 4 : 5;
@@ -754,7 +754,7 @@ async function formatSheetColorsDirect(sheet, values) {
       rowColor = colorNew;
     } else if (status === 'renewal') {
       rowColor = colorRenewal;
-    } else if (status === 'complete' || status.indexOf('complete') !== -1) {
+    } else if (status === 'complete' || status.indexOf('complete') !== -1 || status === 'closed') {
       rowColor = colorComplete;
     } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
       rowColor = colorCancelled;
@@ -1215,7 +1215,7 @@ async function generateMonthlySheet() {
         var qty = "1 Licenses";
 
         // Map status
-        var statusMapped = "DONE";
+        var statusMapped = "CLOSED";
         var stLower = rec.status.toLowerCase();
         if (stLower === 'new') {
           statusMapped = "PENDING";
@@ -1296,17 +1296,17 @@ async function generateMonthlySheet() {
         await context.sync();
 
         // Apply background color-coding based on status (same as master list soft pastel colors) using Conditional Formatting
-        var colorNew = '#e8f0fe';        // Soft Blue (PENDING)
-        var colorRenewal = '#f3e8ff';    // Soft Purple (RENEWED)
-        var colorComplete = '#e6f4ea';   // Soft Green (DONE)
-        var colorCancelled = '#fce8e6';  // Soft Red (CANCELLED)
+        var colorNew = '#fefce8';        // Soft Yellow (PENDING)
+        var colorRenewal = '#f0fdf4';    // Soft Green (RENEWED)
+        var colorComplete = '#eff6ff';   // Soft Blue (CLOSED)
+        var colorCancelled = '#fef2f2';  // Soft Red (CANCELLED)
 
         // 1. Add Data Validation (Dropdown) to the Status column (Column H)
         var statusColRange = targetSheet.getRange("H7:H" + (6 + rowsToWrite.length));
         statusColRange.dataValidation.rule = {
           list: {
             inCellDropDown: true,
-            source: "PENDING,RENEWED,DONE,CANCELLED"
+            source: "PENDING,RENEWED,CLOSED,CANCELLED"
           }
         };
 
@@ -1325,11 +1325,11 @@ async function generateMonthlySheet() {
         formatRenewed.custom.format.fill.color = colorRenewal;
         formatRenewed.custom.format.font.color = "#000000";
 
-        // DONE Rule
-        var formatDone = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
-        formatDone.custom.rule.formula = '=$H7="DONE"';
-        formatDone.custom.format.fill.color = colorComplete;
-        formatDone.custom.format.font.color = "#000000";
+        // CLOSED Rule
+        var formatClosed = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        formatClosed.custom.rule.formula = '=$H7="CLOSED"';
+        formatClosed.custom.format.fill.color = colorComplete;
+        formatClosed.custom.format.font.color = "#000000";
 
         // CANCELLED Rule
         var formatCancelled = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
