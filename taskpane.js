@@ -395,9 +395,18 @@ function resetForm() {
   if (endPicker) endPicker.clear();
   document.getElementById('form-row-num').value = '';
   document.getElementById('save-btn').innerText = 'Save Subscription';
+  document.getElementById('save-btn').style.display = 'block';
   document.getElementById('cancel-edit').style.display = 'none';
+  document.getElementById('cancel-edit').style.opacity = '1';
+  document.getElementById('cancel-edit').disabled = false;
   var deleteBtn = document.getElementById('delete-btn');
-  if (deleteBtn) deleteBtn.style.display = 'none';
+  if (deleteBtn) {
+    deleteBtn.style.display = 'none';
+    deleteBtn.style.opacity = '1';
+    deleteBtn.disabled = false;
+  }
+  var confirmBox = document.getElementById('delete-confirm-box');
+  if (confirmBox) confirmBox.style.display = 'none';
 }
 
 // Save form data back to Excel Sheet
@@ -504,27 +513,42 @@ async function saveRecord(e) {
   }
 }
 
-// Delete form data from Excel Sheet
+// Show inline delete confirmation panel
+function showDeleteConfirm() {
+  document.getElementById('save-btn').style.display = 'none';
+  document.getElementById('cancel-edit').style.display = 'none';
+  document.getElementById('delete-btn').style.display = 'none';
+  
+  var confirmBox = document.getElementById('delete-confirm-box');
+  if (confirmBox) confirmBox.style.display = 'block';
+}
+
+// Hide inline delete confirmation panel and restore buttons
+function hideDeleteConfirm() {
+  var confirmBox = document.getElementById('delete-confirm-box');
+  if (confirmBox) confirmBox.style.display = 'none';
+
+  document.getElementById('save-btn').style.display = 'block';
+  document.getElementById('cancel-edit').style.display = 'block';
+  document.getElementById('delete-btn').style.display = 'block';
+}
+
+// Delete form data from Excel Sheet (called after inline confirmation)
 async function deleteRecord() {
   var rowNumVal = document.getElementById('form-row-num').value;
   if (!rowNumVal) return;
   var rowNum = parseInt(rowNumVal, 10);
 
-  if (!confirm("Are you sure you want to delete this subscription entry from Row " + rowNum + "?")) {
-    return;
-  }
-
   document.getElementById('error-box').style.display = 'none';
-  var deleteBtn = document.getElementById('delete-btn');
-  var saveBtn = document.getElementById('save-btn');
-  var cancelEdit = document.getElementById('cancel-edit');
-
-  if (deleteBtn) {
-    deleteBtn.innerText = 'Deleting...';
-    deleteBtn.disabled = true;
+  
+  var confirmBox = document.getElementById('delete-confirm-box');
+  var confirmButtons = confirmBox ? confirmBox.getElementsByTagName('button') : [];
+  for (var i = 0; i < confirmButtons.length; i++) {
+    confirmButtons[i].disabled = true;
+    if (confirmButtons[i].classList.contains('btn-danger')) {
+      confirmButtons[i].innerText = 'Deleting...';
+    }
   }
-  if (saveBtn) saveBtn.disabled = true;
-  if (cancelEdit) cancelEdit.disabled = true;
 
   try {
     await Excel.run(async function (context) {
@@ -547,16 +571,13 @@ async function deleteRecord() {
     showSuccess("Subscription entry deleted successfully!");
   } catch (err) {
     showError("Failed to delete record: " + err.message);
-  } finally {
-    var deleteBtn = document.getElementById('delete-btn');
-    var saveBtn = document.getElementById('save-btn');
-    var cancelEdit = document.getElementById('cancel-edit');
-    if (deleteBtn) {
-      deleteBtn.disabled = false;
-      deleteBtn.innerText = 'Delete Entry';
+    // Re-enable confirmation box buttons on error
+    for (var i = 0; i < confirmButtons.length; i++) {
+      confirmButtons[i].disabled = false;
+      if (confirmButtons[i].classList.contains('btn-danger')) {
+        confirmButtons[i].innerText = 'Yes, Delete';
+      }
     }
-    if (saveBtn) saveBtn.disabled = false;
-    if (cancelEdit) cancelEdit.disabled = false;
   }
 }
 
