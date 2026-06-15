@@ -734,10 +734,10 @@ async function sortSubscriptions() {
 
 // Background row pastel coloring helper
 async function formatSheetColorsDirect(sheet, values) {
-  var colorNew = '#fefce8';        // Soft Yellow
-  var colorRenewal = '#f0fdf4';    // Soft Green
-  var colorComplete = '#eff6ff';   // Soft Blue
-  var colorCancelled = '#fef2f2';  // Soft Red
+  var colorNew = '#fef9c3';        // Soft Yellow
+  var colorRenewal = '#dcfce7';    // Soft Green
+  var colorComplete = '#dbeafe';   // Soft Blue
+  var colorCancelled = '#fee2e2';  // Soft Red
   var colorDefault = '#ffffff';    // White
 
   var startRow = currentListType === 'monthly' ? 4 : 5;
@@ -1296,10 +1296,10 @@ async function generateMonthlySheet() {
         await context.sync();
 
         // Apply background color-coding based on status (same as master list soft pastel colors) using Conditional Formatting
-        var colorNew = '#fefce8';        // Soft Yellow (PENDING)
-        var colorRenewal = '#f0fdf4';    // Soft Green (RENEWED)
-        var colorComplete = '#eff6ff';   // Soft Blue (CLOSED)
-        var colorCancelled = '#fef2f2';  // Soft Red (CANCELLED)
+        var colorNew = '#fef9c3';        // Soft Yellow (PENDING)
+        var colorRenewal = '#dcfce7';    // Soft Green (RENEWED)
+        var colorComplete = '#dbeafe';   // Soft Blue (CLOSED)
+        var colorCancelled = '#fee2e2';  // Soft Red (CANCELLED)
 
         // 1. Add Data Validation (Dropdown) to the Status column (Column H)
         var statusColRange = targetSheet.getRange("H7:H" + (6 + rowsToWrite.length));
