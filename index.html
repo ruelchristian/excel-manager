@@ -1,0 +1,1135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADB Subscription Manager - User Guide & Setup Documentation</title>
+  <meta name="description" content="Comprehensive documentation and user guide for setting up and using the ADB Subscription Manager Excel Cloud Add-in.">
+  
+  <!-- Typography & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <!-- CSS Styles -->
+  <style>
+    :root {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #f1f5f9;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --text-muted: #475569;
+      --primary: #4f46e5;
+      --primary-hover: #3730a3;
+      --primary-light: rgba(79, 70, 229, 0.08);
+      --accent: #06b6d4;
+      --border: #e2e8f0;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      
+      /* Status Badge Colors */
+      --badge-new-text: #854d0e;
+      --badge-new-bg: #fde047;
+      --badge-renewal-text: #166534;
+      --badge-renewal-bg: #86efac;
+      --badge-completed-text: #1e40af;
+      --badge-completed-bg: #93c5fd;
+      --badge-cancelled-text: #991b1b;
+      --badge-cancelled-bg: #fca5a5;
+    }
+
+    /* Dark Mode variables */
+    [data-theme="dark"] {
+      --bg-primary: #0b0f19;
+      --bg-secondary: #161e2e;
+      --bg-card: #1f2a38;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #6366f1;
+      --primary-hover: #4f46e5;
+      --primary-light: rgba(99, 102, 241, 0.15);
+      --border: #374151;
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.4), 0 4px 6px -4px rgba(0, 0, 0, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: var(--font-body);
+      background-color: var(--bg-primary);
+      color: var(--text-main);
+      line-height: 1.6;
+      font-size: 15px;
+      transition: background-color 0.3s, color 0.3s;
+    }
+
+    /* Navigation Bar */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    [data-theme="dark"] nav {
+      background: rgba(11, 15, 25, 0.8);
+    }
+
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 20px;
+      color: var(--text-main);
+      text-decoration: none;
+      letter-spacing: -0.02em;
+    }
+
+    .logo i {
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+    }
+
+    .nav-link {
+      font-weight: 500;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+      font-size: 14px;
+    }
+
+    .nav-link:hover {
+      color: var(--primary);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      font-weight: 600;
+      border-radius: 8px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-primary {
+      background-color: var(--primary);
+      color: #ffffff !important;
+    }
+
+    .btn-primary:hover {
+      background-color: var(--primary-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background-color: var(--bg-secondary);
+      color: var(--text-main) !important;
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background-color: var(--border);
+    }
+
+    .theme-toggle {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 18px;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .theme-toggle:hover {
+      color: var(--primary);
+    }
+
+    /* Hero Section */
+    .hero {
+      padding: 80px 24px 60px 24px;
+      text-align: center;
+      background-image: 
+        radial-gradient(circle at 90% 10%, var(--primary-light), transparent 400px),
+        radial-gradient(circle at 10% 90%, rgba(6, 182, 212, 0.05), transparent 400px);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .hero-container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background-color: var(--primary-light);
+      border: 1px solid rgba(79, 70, 229, 0.2);
+      color: var(--primary);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .hero h1 {
+      font-family: var(--font-heading);
+      font-size: 48px;
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      margin-bottom: 18px;
+      color: var(--text-main);
+    }
+
+    .hero h1 span {
+      background: linear-gradient(135deg, var(--primary) 30%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero-subtitle {
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto 32px auto;
+    }
+
+    .hero-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 60px;
+    }
+
+    /* Screenshot Browser Mockup */
+    .browser-mockup {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: var(--shadow-lg);
+      max-width: 800px;
+      margin: 0 auto;
+      overflow: hidden;
+      transform: translateY(0);
+      transition: transform 0.3s, box-shadow 0.3s;
+      animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .browser-mockup:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .browser-header {
+      background: var(--bg-secondary);
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-red { background-color: #ef4444; }
+    .dot-yellow { background-color: #f59e0b; }
+    .dot-green { background-color: #10b981; }
+
+    .browser-address {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      flex: 1;
+      margin-left: 20px;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .browser-content {
+      position: relative;
+      background-color: #f1f5f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 10px;
+    }
+
+    .browser-content img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 6px;
+      box-shadow: var(--shadow-md);
+    }
+
+    /* Content Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 60px 24px;
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      gap: 48px;
+    }
+
+    /* Sidebar Navigation */
+    .sidebar {
+      position: sticky;
+      top: 100px;
+      height: fit-content;
+    }
+
+    .sidebar-title {
+      font-family: var(--font-heading);
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .sidebar-item a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 16px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 14px;
+      border-radius: 8px;
+      transition: all 0.2s;
+    }
+
+    .sidebar-item a:hover {
+      color: var(--primary);
+      background-color: var(--primary-light);
+    }
+
+    .sidebar-item.active a {
+      color: var(--primary);
+      background-color: var(--primary-light);
+      font-weight: 600;
+    }
+
+    /* Main Content Details */
+    main {
+      min-width: 0; /* Prevents flex items from overflowing */
+    }
+
+    section {
+      scroll-margin-top: 100px;
+      margin-bottom: 60px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 40px;
+    }
+
+    section:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .section-header {
+      font-family: var(--font-heading);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-main);
+    }
+
+    .section-header i {
+      color: var(--primary);
+    }
+
+    p {
+      color: var(--text-muted);
+      margin-bottom: 16px;
+      font-size: 15px;
+    }
+
+    /* Card Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+      border-color: rgba(79, 70, 229, 0.3);
+    }
+
+    .feature-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      background-color: var(--primary-light);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+
+    .feature-card h3 {
+      font-family: var(--font-heading);
+      font-size: 17px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      color: var(--text-main);
+    }
+
+    .feature-card p {
+      font-size: 13.5px;
+      margin-bottom: 0;
+    }
+
+    /* Tabs for Setup Steps */
+    .guide-tabs {
+      display: flex;
+      background: var(--bg-secondary);
+      padding: 4px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      width: fit-content;
+    }
+
+    .guide-tab-btn {
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-weight: 600;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: pointer;
+      background: none;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .guide-tab-btn.active {
+      background: var(--bg-card);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .guide-tab-content {
+      display: none;
+    }
+
+    .guide-tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Step List */
+    .steps {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .step-item {
+      display: flex;
+      gap: 18px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .step-number {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+    }
+
+    .step-body {
+      flex: 1;
+    }
+
+    .step-body h4 {
+      font-family: var(--font-heading);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: var(--text-main);
+    }
+
+    .step-body p {
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+
+    .code-block {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      color: var(--text-main);
+      overflow-x: auto;
+      margin-top: 8px;
+      position: relative;
+    }
+
+    .code-block button {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      color: var(--text-muted);
+      transition: all 0.2s;
+    }
+
+    .code-block button:hover {
+      background: var(--primary);
+      color: #ffffff;
+      border-color: var(--primary);
+    }
+
+    /* Badge Reference Grid */
+    .badge-ref-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .badge-ref-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      text-align: center;
+    }
+
+    .ref-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+
+    .badge-new { color: var(--badge-new-text); background-color: var(--badge-new-bg); }
+    .badge-renewal { color: var(--badge-renewal-text); background-color: var(--badge-renewal-bg); }
+    .badge-completed { color: var(--badge-completed-text); background-color: var(--badge-completed-bg); }
+    .badge-cancelled { color: var(--badge-cancelled-text); background-color: var(--badge-cancelled-bg); }
+
+    .color-preview {
+      width: 100%;
+      height: 24px;
+      border-radius: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 500;
+    }
+
+    .color-new { background-color: #fef08a; color: #854d0e; }
+    .color-renewal { background-color: #bbf7d0; color: #166534; }
+    .color-complete { background-color: #bfdbfe; color: #1e40af; }
+    .color-cancelled { background-color: #fecaca; color: #991b1b; }
+
+    /* Footer */
+    footer {
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      padding: 40px 24px;
+      text-align: center;
+      font-size: 13.5px;
+      color: var(--text-muted);
+      transition: background-color 0.3s, border-color 0.3s;
+    }
+
+    footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .container {
+        grid-template-columns: 1fr;
+        gap: 32px;
+      }
+
+      .sidebar {
+        display: none; /* Hide sticky sidebar navigation on smaller screens */
+      }
+
+      .hero h1 {
+        font-size: 36px;
+      }
+      
+      .hero-subtitle {
+        font-size: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav>
+    <div class="nav-container">
+      <a href="#" class="logo">
+        <i class="fa-solid fa-file-excel"></i> ADB Subscription Manager
+      </a>
+      <div class="nav-links">
+        <a href="#quickstart" class="nav-link">Setup</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#usage" class="nav-link">How to Use</a>
+        <button class="theme-toggle" id="theme-toggle" aria-label="Toggle Theme">
+          <i class="fa-solid fa-moon"></i>
+        </button>
+        <a href="taskpane.html" class="btn btn-primary" target="_blank">
+          Open Add-in UI <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="hero">
+    <div class="hero-container">
+      <div class="hero-badge">
+        <i class="fa-solid fa-sparkles"></i> Microsoft Excel Add-in
+      </div>
+      <h1>ADB Subscription Manager <span>User Guide</span></h1>
+      <p class="hero-subtitle">
+        Maintain your ADB subscription database inside Microsoft Excel Cloud or Excel Desktop. View, search, edit, and format your records easily with a secure side panel.
+      </p>
+      
+      <div class="hero-actions">
+        <a href="#quickstart" class="btn btn-primary btn-lg"><i class="fa-solid fa-rocket"></i> Get Started Setup</a>
+        <a href="#usage" class="btn btn-secondary btn-lg"><i class="fa-solid fa-book-open"></i> View Usage Guide</a>
+      </div>
+
+      <!-- Screenshot Browser Mockup -->
+      <div class="browser-mockup">
+        <div class="browser-header">
+          <div class="dot dot-red"></div>
+          <div class="dot dot-yellow"></div>
+          <div class="dot dot-green"></div>
+          <div class="browser-address">
+            <i class="fa-solid fa-lock text-success"></i> https://ruelchristian.github.io/excel-manager/
+          </div>
+        </div>
+        <div class="browser-content">
+          <img src="Screenshot 2026-06-15 043345.png" alt="ADB Subscription Manager Excel Add-in Sidebar Screenshot">
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    
+    <!-- Sticky Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-title">Documentation</div>
+      <ul class="sidebar-menu">
+        <li class="sidebar-item active"><a href="#quickstart"><i class="fa-solid fa-rocket"></i> Sideloading Setup</a></li>
+        <li class="sidebar-item"><a href="#features"><i class="fa-solid fa-sliders"></i> Features Overview</a></li>
+        <li class="sidebar-item"><a href="#usage"><i class="fa-solid fa-keyboard"></i> Usage Guide</a></li>
+        <li class="sidebar-item"><a href="#colors"><i class="fa-solid fa-palette"></i> Colors & Sorting</a></li>
+        <li class="sidebar-item"><a href="#faq"><i class="fa-solid fa-circle-question"></i> Troubleshooting</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+      
+      <!-- Sideloading Setup Section -->
+      <section id="quickstart">
+        <h2 class="section-header">
+          <i class="fa-solid fa-rocket"></i> Sideloading Setup Guide
+        </h2>
+        <p>
+          To run custom HTML/JS side panels in Microsoft Excel Cloud (or Desktop), you must sideload the add-in. Since it requires a secure secure <code>https://</code> URL, the add-in is hosted right here on GitHub Pages.
+        </p>
+
+        <div class="guide-tabs">
+          <button class="guide-tab-btn active" onclick="switchGuideTab('web')">Excel for Web (Cloud/OneDrive)</button>
+          <button class="guide-tab-btn" onclick="switchGuideTab('desktop')">Excel for Windows/Mac (Desktop)</button>
+        </div>
+
+        <!-- Web Setup Content -->
+        <div id="setup-web" class="guide-tab-content active">
+          <ul class="steps">
+            <li class="step-item">
+              <div class="step-number">1</div>
+              <div class="step-body">
+                <h4>Prepare your manifest.xml</h4>
+                <p>
+                  Ensure your local <code>manifest.xml</code> points to this live GitHub URL on line 18:
+                </p>
+                <div class="code-block">
+                  &lt;SourceLocation DefaultValue="https://ruelchristian.github.io/excel-manager/taskpane.html"/&gt;
+                  <button onclick="copyText(this, 'https://ruelchristian.github.io/excel-manager/taskpane.html')"><i class="fa-regular fa-copy"></i> Copy</button>
+                </div>
+              </div>
+            </li>
+            <li class="step-item">
+              <div class="step-number">2</div>
+              <div class="step-body">
+                <h4>Open Excel Cloud</h4>
+                <p>
+                  Log into OneDrive in your browser and open your master workbook: <strong><code>ADB MONTHLY (MASTER FILE) FINAL.xlsx</code></strong>.
+                </p>
+              </div>
+            </li>
+            <li class="step-item">
+              <div class="step-number">3</div>
+              <div class="step-body">
+                <h4>Upload the Manifest</h4>
+                <p>
+                  Go to the top ribbon menu, click the <strong>Insert</strong> tab, select <strong>Add-ins</strong> (or <strong>Office Add-ins</strong>), click <strong>Upload My Add-in</strong> in the top-right corner, and select your edited <code>manifest.xml</code>.
+                </p>
+              </div>
+            </li>
+            <li class="step-item">
+              <div class="step-number">4</div>
+              <div class="step-body">
+                <h4>Start Managing</h4>
+                <p>
+                  The <strong>ADB Subscription Manager</strong> sidebar will slide open on the right side of your worksheet.
+                </p>
+              </div>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Desktop Setup Content -->
+        <div id="setup-desktop" class="guide-tab-content">
+          <ul class="steps">
+            <li class="step-item">
+              <div class="step-number">1</div>
+              <div class="step-body">
+                <h4>Create a Shared Network Folder</h4>
+                <p>
+                  Create a folder on your local computer (e.g. <code>C:\ExcelAddins</code>) and place your <code>manifest.xml</code> inside it.
+                </p>
+              </div>
+            </li>
+            <li class="step-item">
+              <div class="step-number">2</div>
+              <div class="step-body">
+                <h4>Share the Folder & Configure Trust</h4>
+                <p>
+                  Right-click the folder > <strong>Properties</strong> > <strong>Sharing</strong> > click <strong>Share</strong> (add yourself). Copy the Network Path (e.g. <code>\\YOUR-PC\ExcelAddins</code>).
+                </p>
+              </div>
+            </li>
+            <li class="step-item">
+              <div class="step-number">3</div>
+              <div class="step-body">
+                <h4>Register in Excel Trust Center</h4>
+                <p>
+                  Open Excel Desktop > <strong>File</strong> > <strong>Options</strong> > <strong>Trust Center</strong> > <strong>Trust Center Settings</strong> > <strong>Trusted Add-in Catalogs</strong>. Paste the network path, click <strong>Add Catalog</strong>, and check the <strong>Show in Menu</strong> box.
+                </p>
+              </div>
+            </li>
+            <li class="step-item">
+              <div class="step-number">4</div>
+              <div class="step-body">
+                <h4>Insert the Add-in</h4>
+                <p>
+                  Restart Excel. Open your sheet, go to <strong>Insert</strong> > <strong>My Add-ins</strong> > <strong>Shared Folder</strong>, select <strong>ADB Subscription Manager</strong>, and click <strong>Add</strong>.
+                </p>
+              </div>
+            </li>
+          </ul>
+        </div>
+      </section>
+
+      <!-- Features Section -->
+      <section id="features">
+        <h2 class="section-header">
+          <i class="fa-solid fa-sliders"></i> Features Overview
+        </h2>
+        <p>
+          The ADB Subscription Manager was built to replicate your original Google Sheets dashboard while taking advantage of Excel's speed, offering date protections and automated pastel coloring.
+        </p>
+        
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-magnifying-glass"></i></div>
+            <h3>Real-Time Search</h3>
+            <p>Type keywords to instantly filter records by End User (EU), Sales Officer (SO), Product, or Subscription ID across thousands of rows.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-calendar-days"></i></div>
+            <h3>Date Range Filters</h3>
+            <p>Filter active subscriptions by start or end date thresholds using an integrated popup calendar (flatpickr).</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+            <h3>Add & Edit Forms</h3>
+            <p>Modify records via sidebar forms. Click any list item card to pull its data, edit fields safely, and save it back to the sheet.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div>
+            <h3>Data Protections</h3>
+            <p>Prevents Excel from auto-converting remaining/total months (like <code>3/12</code>) into dates by locking number formats as Text.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-arrow-down-a-z"></i></div>
+            <h3>Multi-Tier Sorting</h3>
+            <p>Orders your rows intelligently: active items are brought to the top (New -> Renewal -> Complete -> Cancelled), then sorted by nearest expiration date.</p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-palette"></i></div>
+            <h3>Row Highlight Colors</h3>
+            <p>Applies custom, professional pastel colors across entire rows in Excel to help you distinguish renewal statuses in a split second.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Usage Guide Section -->
+      <section id="usage">
+        <h2 class="section-header">
+          <i class="fa-solid fa-keyboard"></i> Usage Guide & Walkthrough
+        </h2>
+        
+        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">1. Searching and Filtering</h3>
+        <p>
+          When you open the sidebar, it automatically displays your subscription cards. You can:
+        </p>
+        <ul style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
+          <li><strong>Keyword Search:</strong> Use the search bar to locate specific End Users, SOs, Products, or Subscription IDs.</li>
+          <li><strong>Status Filter:</strong> Select a status tab (All, Active/New, Renewal, Complete, Cancelled) to narrow down items.</li>
+          <li><strong>Date Range Filter:</strong> Click the date inputs to filter subscriptions active during a specific period.</li>
+        </ul>
+
+        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">2. Adding a New Subscription</h3>
+        <p>
+          Instead of scrolling to the bottom of the worksheet and manually typing values:
+        </p>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
+          <li>Navigate to the <strong>Add/Edit Form</strong> tab.</li>
+          <li>Fill in all the required fields (End User, Product, Month, Start & End Dates, etc.).</li>
+          <li>Click the <strong>Save Subscription</strong> button. The entry will be written to Excel, and number formatting is applied automatically to secure inputs.</li>
+        </ol>
+
+        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">3. Editing & Deleting Entries</h3>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
+          <li>Find the entry in the list view (under the Monthly or Annual Master tabs).</li>
+          <li><strong>Click the card</strong>. The sidebar will automatically switch to the form tab and populate all fields.</li>
+          <li>Make your edits, then click <strong>Save Subscription</strong>.</li>
+          <li>To remove it, click the red <strong>Delete</strong> button at the bottom of the form, and confirm when prompted. The row will be deleted, shifting rows up.</li>
+        </ol>
+
+        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">4. Generating Monthly Master Template Sheets</h3>
+        <p>
+          If you want to create a clean template sheet for a specific month:
+        </p>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
+          <li>Under the Monthly Master tab, click the green <strong>Generate Monthly Sheet</strong> button at the top.</li>
+          <li>Select the desired target month (e.g. <em>January</em>) from the dropdown.</li>
+          <li>Click <strong>Generate Template</strong>. A new template worksheet will be initialized and pre-formatted.</li>
+        </ol>
+      </section>
+
+      <!-- Colors & Sorting Reference Section -->
+      <section id="colors">
+        <h2 class="section-header">
+          <i class="fa-solid fa-palette"></i> Colors & Sorting Reference
+        </h2>
+        <p>
+          The add-in formats your Excel sheet with clean, professional pastel background colors. Below is a reference of the status tags, sidebar badges, and spreadsheet colors:
+        </p>
+
+        <div class="badge-ref-grid">
+          <div class="badge-ref-card">
+            <span class="ref-badge badge-new">New / Active</span>
+            <div class="color-preview color-new">Excel: Soft Yellow</div>
+            <p style="font-size: 12px; margin-top: 4px;">Assigned to new/active contracts requiring attention.</p>
+          </div>
+
+          <div class="badge-ref-card">
+            <span class="ref-badge badge-renewal">Renewal</span>
+            <div class="color-preview color-renewal">Excel: Soft Green</div>
+            <p style="font-size: 12px; margin-top: 4px;">Assigned to renewal pipelines currently in progress.</p>
+          </div>
+
+          <div class="badge-ref-card">
+            <span class="ref-badge badge-completed">Complete / Closed</span>
+            <div class="color-preview color-complete">Excel: Soft Blue</div>
+            <p style="font-size: 12px; margin-top: 4px;">Contracts that are fully finalized, processed, or complete.</p>
+          </div>
+
+          <div class="badge-ref-card">
+            <span class="ref-badge badge-cancelled">Cancelled</span>
+            <div class="color-preview color-cancelled">Excel: Soft Red</div>
+            <p style="font-size: 12px; margin-top: 4px;">Contracts terminated, lapsed, or explicitly cancelled.</p>
+          </div>
+        </div>
+
+        <h3 style="margin-top: 32px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;"><i class="fa-solid fa-arrow-down-wide-narrow text-primary" style="margin-right: 8px;"></i> Sorting Algorithm</h3>
+        <p>
+          When you click <strong>Re-Sort & Format Sheet</strong>, the system executes a 3-tier sorting algorithm directly inside your Excel worksheet:
+        </p>
+        <div style="background-color: var(--bg-secondary); border: 1px solid var(--border); border-radius: 8px; padding: 20px; margin-top: 16px;">
+          <ol style="margin-left: 20px; font-size: 14.5px; color: var(--text-main); display: flex; flex-direction: column; gap: 8px;">
+            <li><strong>Tier 1: Status Importance</strong> - Brings active subscriptions (New/Active first, then Renewal) to the very top. Complete/Closed rows are pushed below them, and Cancelled rows are moved to the bottom.</li>
+            <li><strong>Tier 2: Start Date (Descending)</strong> - Within each status group, items are ordered by their start dates, placing the most recent subscriptions at the top.</li>
+            <li><strong>Tier 3: End User Name (Alphabetical)</strong> - If statuses and start dates match, rows are organized alphabetically by their End User (EU) name.</li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- Troubleshooting Section -->
+      <section id="faq">
+        <h2 class="section-header">
+          <i class="fa-solid fa-circle-question"></i> Troubleshooting & FAQ
+        </h2>
+        
+        <h3 style="margin-top: 20px; margin-bottom: 8px; font-family: var(--font-heading); font-size: 16px; font-weight: 700;">Q: Why are sorting and formatting not happening automatically when I open the panel?</h3>
+        <p>
+          A: To prevent automatic, unwanted modifications to your workbook on start, auto-sorting at startup has been disabled. If you want to sort and highlight all rows, scroll to the bottom of the list view and click the <strong>Re-Sort & Format Sheet</strong> button manually.
+        </p>
+
+        <h3 style="margin-top: 20px; margin-bottom: 8px; font-family: var(--font-heading); font-size: 16px; font-weight: 700;">Q: What is the "Legacy sheet layout detected" warning?</h3>
+        <p>
+          A: This warning appears if the Monthly Master sheet has an older layout structure (9-column or 10-column layout) instead of the current 12-column layout. When this is detected, the add-in stops loading to prevent data misalignment. Clicking the <strong>Re-Sort & Format Sheet</strong> button will automatically convert, re-align, and format the sheet into the correct 12-column layout.
+        </p>
+
+        <h3 style="margin-top: 20px; margin-bottom: 8px; font-family: var(--font-heading); font-size: 16px; font-weight: 700;">Q: Excel converted my remaining months (e.g. 1/12) into a date. How do I fix this?</h3>
+        <p>
+          A: Excel tends to auto-detect numeric fractions as dates. To prevent this, the add-in pre-formats data columns as <strong>Text</strong> (<code>@</code>) before writing. If you have existing cells that converted, click the card in the sidebar to open it in the form, verify the remaining/total months value (e.g., <code>1/12</code>), and click <strong>Save</strong>. The add-in will write it back as text and fix the cellular display.
+        </p>
+
+        <h3 style="margin-top: 20px; margin-bottom: 8px; font-family: var(--font-heading); font-size: 16px; font-weight: 700;">Q: Can I run this in Excel Desktop without internet access?</h3>
+        <p>
+          A: The sideloaded add-in requires access to the hosted files (<code>taskpane.html</code> and <code>taskpane.js</code>) on GitHub Pages, so an active internet connection is required to fetch and run the sidebar scripts.
+        </p>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <footer>
+    <div style="max-width: 1200px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+      <p style="margin-bottom: 0;">&copy; 2026 ADB Subscription Manager. All rights reserved.</p>
+      <p style="margin-bottom: 0;">Hosted on <a href="https://github.com/ruelchristian/excel-manager" target="_blank"><i class="fa-brands fa-github"></i> GitHub Pages</a></p>
+    </div>
+  </footer>
+
+  <!-- Theme and Tab Scripts -->
+  <script>
+    // Theme toggle logic
+    const themeToggle = document.getElementById('theme-toggle');
+    const htmlEl = document.documentElement;
+    
+    // Check local storage or system preference
+    const currentTheme = localStorage.getItem('theme') || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    htmlEl.setAttribute('data-theme', currentTheme);
+    updateThemeIcon(currentTheme);
+
+    themeToggle.addEventListener('click', () => {
+      let theme = htmlEl.getAttribute('data-theme');
+      let newTheme = theme === 'dark' ? 'light' : 'dark';
+      htmlEl.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    });
+
+    function updateThemeIcon(theme) {
+      const icon = themeToggle.querySelector('i');
+      if (theme === 'dark') {
+        icon.className = 'fa-solid fa-sun';
+      } else {
+        icon.className = 'fa-solid fa-moon';
+      }
+    }
+
+    // Guide Setup tabs logic
+    function switchGuideTab(target) {
+      document.querySelectorAll('.guide-tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.guide-tab-content').forEach(content => content.classList.remove('active'));
+      
+      if (target === 'web') {
+        document.querySelector('.guide-tab-btn[onclick="switchGuideTab(\'web\')"]').classList.add('active');
+        document.getElementById('setup-web').classList.add('active');
+      } else {
+        document.querySelector('.guide-tab-btn[onclick="switchGuideTab(\'desktop\')"]').classList.add('active');
+        document.getElementById('setup-desktop').classList.add('active');
+      }
+    }
+
+    // Helper to copy text to clipboard
+    function copyText(btn, text) {
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+        btn.style.backgroundColor = '#10b981';
+        btn.style.color = '#ffffff';
+        btn.style.borderColor = '#10b981';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.style.backgroundColor = '';
+          btn.style.color = '';
+          btn.style.borderColor = '';
+        }, 2000);
+      });
+    }
+
+    // Highlighting current section in sidebar on scroll
+    window.addEventListener('DOMContentLoaded', () => {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          const id = entry.target.getAttribute('id');
+          if (entry.intersectionRatio > 0.3) {
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            const activeLink = document.querySelector(`.sidebar-item a[href="#${id}"]`);
+            if (activeLink) {
+              activeLink.parentElement.classList.add('active');
+            }
+          }
+        });
+      }, { threshold: [0.1, 0.3, 0.5, 0.7] });
+
+      // Track all sections
+      document.querySelectorAll('section').forEach(section => {
+        observer.observe(section);
+      });
+    });
+  </script>
+</body>
+</html>
