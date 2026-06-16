@@ -136,10 +136,9 @@ async function loadSubscriptions() {
   document.getElementById('error-box').style.display = 'none';
 
   try {
-    // 1. Detect and Restructure columns if Monthly (run sortSubscriptions first)
-    // 1. Detect and Restructure columns if Monthly (run sortSubscriptions first)
+    // 1. Detect and Check for legacy column layouts (Monthly)
     if (currentListType === 'monthly') {
-      var isNeedRestructure = false;
+      var legacyLayoutDetected = false;
       await Excel.run(async function (context) {
         var sheetName = "ADB MASTER LIST MONTHLY";
         var sheet = context.workbook.worksheets.getItemOrNullObject(sheetName);
@@ -151,15 +150,18 @@ async function loadSubscriptions() {
           await context.sync();
           var colBHeader = String(headerRange.values[0][1] || '').trim().toUpperCase();
           var colDHeader = String(headerRange.values[0][3] || '').trim().toUpperCase();
-          if (colBHeader === "MONTHS LEFT" || (colBHeader === "STATUS" && colDHeader === "MONTHS LEFT")) {
-            isNeedRestructure = true;
+          
+          var is10Column = (colBHeader === "MONTHS LEFT");
+          var is9Column = (colBHeader === "STATUS" && colDHeader === "R/T");
+          if (is10Column || is9Column) {
+            legacyLayoutDetected = true;
           }
         }
       });
       
-      if (isNeedRestructure) {
-        document.getElementById('loader').innerText = "Consolidating monthly master sheet columns...";
-        await sortSubscriptions();
+      if (legacyLayoutDetected) {
+        showError("Legacy sheet layout detected (9-column or 10-column). Please click 'Re-Sort & Format Sheet' below to format and consolidate columns.");
+        return;
       }
     }
 
