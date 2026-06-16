@@ -1491,14 +1491,14 @@ async function generateMonthlySheet() {
         var qty = "1 Licenses";
 
         // Map status
-        var statusMapped = "CLOSED";
+        var statusMapped = "DONE";
         var stLower = rec.status.toLowerCase();
         if (stLower === 'new') {
           statusMapped = "PENDING";
         } else if (stLower === 'renewal') {
           statusMapped = rec.poStatus.toLowerCase() === 'po pending' ? "PENDING" : "RENEWED";
         } else if (stLower === 'cancelled') {
-          statusMapped = "CANCELLED";
+          statusMapped = "DONE";
         }
 
         // Initialize variables for oldPo and newPo
@@ -1574,15 +1574,14 @@ async function generateMonthlySheet() {
         // Apply background color-coding based on status (same as master list soft pastel colors) using Conditional Formatting
         var colorNew = '#fef08a';        // Soft Yellow (PENDING)
         var colorRenewal = '#bbf7d0';    // Soft Green (RENEWED)
-        var colorComplete = '#bfdbfe';   // Soft Blue (CLOSED)
-        var colorCancelled = '#fecaca';  // Soft Red (CANCELLED)
+        var colorComplete = '#bfdbfe';   // Soft Blue (DONE)
 
         // 1. Add Data Validation (Dropdown) to the Status column (Column H)
         var statusColRange = targetSheet.getRange("H7:H" + (6 + rowsToWrite.length));
         statusColRange.dataValidation.rule = {
           list: {
             inCellDropDown: true,
-            source: "PENDING,RENEWED,CLOSED,CANCELLED"
+            source: "PENDING,DONE,RENEWED"
           }
         };
 
@@ -1601,17 +1600,11 @@ async function generateMonthlySheet() {
         formatRenewed.custom.format.fill.color = colorRenewal;
         formatRenewed.custom.format.font.color = "#000000";
 
-        // CLOSED Rule
-        var formatClosed = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
-        formatClosed.custom.rule.formula = '=$H7="CLOSED"';
-        formatClosed.custom.format.fill.color = colorComplete;
-        formatClosed.custom.format.font.color = "#000000";
-
-        // CANCELLED Rule
-        var formatCancelled = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
-        formatCancelled.custom.rule.formula = '=$H7="CANCELLED"';
-        formatCancelled.custom.format.fill.color = colorCancelled;
-        formatCancelled.custom.format.font.color = "#000000";
+        // DONE Rule
+        var formatDone = fullDataRange.conditionalFormats.add(Excel.ConditionalFormatType.custom);
+        formatDone.custom.rule.formula = '=$H7="DONE"';
+        formatDone.custom.format.fill.color = colorComplete;
+        formatDone.custom.format.font.color = "#000000";
         
         // Set horizontal alignment to Center for columns B to H (headers and data) up to target row
         var generatorLastRow = 6 + rowsToWrite.length;
