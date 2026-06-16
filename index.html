@@ -925,43 +925,102 @@
         <h2 class="section-header">
           <i class="fa-solid fa-keyboard"></i> Usage Guide & Walkthrough
         </h2>
-        
-        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">1. Searching and Filtering</h3>
         <p>
-          When you open the sidebar, it automatically displays your subscription cards. You can:
+          This guide provides a detailed, step-by-step walkthrough of how to operate all the features in the ADB Subscription Manager Excel Add-in sidebar. Follow these steps to manage and format your data efficiently.
         </p>
-        <ul style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
-          <li><strong>Keyword Search:</strong> Use the search bar to locate specific End Users, SOs, Products, or Subscription IDs.</li>
-          <li><strong>Status Filter:</strong> Select a status tab (All, Active/New, Renewal, Complete, Cancelled) to narrow down items.</li>
-          <li><strong>Date Range Filter:</strong> Click the date inputs to filter subscriptions active during a specific period.</li>
+
+        <!-- Step 1: Navigating Tabs -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-folder-open text-primary"></i> 1. Navigating Tabs and Worksheets
+        </h3>
+        <p>
+          The add-in uses a segmented tab bar at the top to switch between data lists and the form:
+        </p>
+        <ul style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+          <li><strong>Monthly Master Tab:</strong> Connects directly to the <code>"ADB MASTER LIST MONTHLY"</code> worksheet. All operations (viewing, adding, editing, sorting) will affect this sheet only.</li>
+          <li><strong>Annual Master Tab:</strong> Connects directly to the <code>"ADB MASTER LIST ANNUAL"</code> worksheet. Operates on a 6-column layout.</li>
+          <li><strong>Add/Edit Form Tab:</strong> A dynamic input form. When you switch here manually, it acts as an "Add New Record" form. If you click a card in the list tabs, it automatically loads that card's details for editing.</li>
         </ul>
 
-        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">2. Adding a New Subscription</h3>
+        <!-- Step 2: Searching & Filtering -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-filter text-primary"></i> 2. Searching, Filtering, and Pagination
+        </h3>
         <p>
-          Instead of scrolling to the bottom of the worksheet and manually typing values:
+          The list views load up to 10 entries per page. You can refine your display using three combined criteria:
         </p>
-        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
-          <li>Navigate to the <strong>Add/Edit Form</strong> tab.</li>
-          <li>Fill in all the required fields (End User, Product, Month, Start & End Dates, etc.).</li>
-          <li>Click the <strong>Save Subscription</strong> button. The entry will be written to Excel, and number formatting is applied automatically to secure inputs.</li>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 10px;">
+          <li><strong>Keyword Search:</strong> Type text into the search bar. In the Monthly list, it scans columns for <em>End User (EU)</em>, <em>Sales Officer (SO)</em>, <em>Product</em>, and <em>Subscription ID</em>. In the Annual list, it scans <em>EU</em>, <em>Financial Advisor / Sales Officer (FA/SO)</em>, and <em>Product</em>.</li>
+          <li><strong>Status Quick-Filter Pills:</strong> Click the pill tags below the search bar (ALL, NEW, RENEWAL, COMPLETE, CANCELLED) to filter instantly.</li>
+          <li><strong>Flatpickr Date Range Filters:</strong> Click the date input boxes (labeled "Active From" and "Active To") to open the calendar popups. Selecting a date range will filter the cards to only display subscriptions active during that timeline (i.e. subscriptions whose Start Date and End Date overlap with your selected filters).</li>
+          <li><strong>Pagination Controls:</strong> Use the previous <code>‹</code> and next <code>›</code> arrow buttons at the bottom of the list to navigate page-by-page. The indicator displays your current page number (e.g. <em>Page 1 of 12</em>) and the row count shows total matching items.</li>
         </ol>
 
-        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">3. Editing & Deleting Entries</h3>
-        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
-          <li>Find the entry in the list view (under the Monthly or Annual Master tabs).</li>
-          <li><strong>Click the card</strong>. The sidebar will automatically switch to the form tab and populate all fields.</li>
-          <li>Make your edits, then click <strong>Save Subscription</strong>.</li>
-          <li>To remove it, click the red <strong>Delete</strong> button at the bottom of the form, and confirm when prompted. The row will be deleted, shifting rows up.</li>
+        <!-- Step 3: Adding a Record -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-plus text-primary"></i> 3. Adding a New Subscription
+        </h3>
+        <p>
+          Adding records via the sidebar ensures Excel cell formatting guidelines and data validations are preserved.
+        </p>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+          <li>Go to the <strong>Add/Edit Form</strong> tab (if a card was loaded for editing, click <strong>Cancel Edit</strong> first to clear the form).</li>
+          <li>The form dynamically adapts its inputs based on the list tab you came from (Monthly Master will show 12 fields; Annual Master will show 6 fields).</li>
+          <li>Fill in the fields. Dropdowns are provided for Statuses and PO status. Use the calendar picker to enter dates.</li>
+          <li>Verify key fields such as <strong>Months Left</strong> and <strong>Total Months</strong> (e.g., <code>3</code> and <code>12</code>).</li>
+          <li>Click the blue <strong>Save Subscription</strong> button. The sidebar will disable the button, write the row to the bottom of the worksheet, automatically apply data validations (dropdown configurations) to the Excel cells, run the sorting algorithm, format colors, and return you to the active list view.</li>
         </ol>
 
-        <h3 style="margin-top: 24px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700;">4. Generating Monthly Master Template Sheets</h3>
+        <!-- Step 4: Editing and Canceling -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-pen-to-square text-primary"></i> 4. Editing and Canceling Edits
+        </h3>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+          <li>Locate the subscription you want to edit on the list view (you can search/filter to find it quickly).</li>
+          <li><strong>Click directly on the card</strong>. The panel will load the cell row details, switch automatically to the Form tab, populate all input boxes, and store the Excel row index in a hidden field.</li>
+          <li>The form title will change to <em>"Edit Subscription Entry (Row X)"</em>, and two extra buttons will appear at the bottom: <strong>Cancel Edit</strong> and <strong>Delete Entry</strong>.</li>
+          <li>Make your changes. If you change your mind, click <strong>Cancel Edit</strong>. The form clears and redirects you back to the list.</li>
+          <li>If you wish to save, click <strong>Save Subscription</strong>. The add-in will overwrite the exact row index in the spreadsheet, re-run sorting and color highlights, and redirect you to the list.</li>
+        </ol>
+
+        <!-- Step 5: Deleting an Entry -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-trash-can text-primary"></i> 5. Deleting Entries with Confirmation
+        </h3>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+          <li>Click on the target subscription card from the list view to load it into the form.</li>
+          <li>Click the red <strong>Delete Entry</strong> button at the bottom of the form.</li>
+          <li>An inline alert panel will slide into view, warning: <em>"Are you sure you want to delete this subscription entry? This will permanently remove the row from Excel."</em></li>
+          <li>To cancel, click <strong>Cancel</strong>. The alert panel collapses.</li>
+          <li>To delete, click the red <strong>Yes, Delete</strong> button. The add-in will delete the entire row in Excel (shifting subsequent rows up to maintain sheet integrity), re-format the colors, re-run sorting, clear the form, and return you to the active list view with a success banner.</li>
+        </ol>
+
+        <!-- Step 6: Sheet Generator -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-table-columns text-primary"></i> 6. Generating Monthly Sheets
+        </h3>
         <p>
-          If you want to create a clean template sheet for a specific month:
+          If you start with a blank workbook or need to initialize a fresh, standard sheet structure:
         </p>
-        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted);">
-          <li>Under the Monthly Master tab, click the green <strong>Generate Monthly Sheet</strong> button at the top.</li>
-          <li>Select the desired target month (e.g. <em>January</em>) from the dropdown.</li>
-          <li>Click <strong>Generate Template</strong>. A new template worksheet will be initialized and pre-formatted.</li>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+          <li>Make sure you are on the <strong>Monthly Master</strong> tab, and click the green <strong>Generate Monthly Sheet</strong> button at the top.</li>
+          <li>A sliding panel will expand downward. Select the target month (e.g. <em>January</em>) from the dropdown selection.</li>
+          <li>Click the blue <strong>Generate</strong> button.</li>
+          <li>The add-in will scan the workbook. If <code>"ADB MASTER LIST MONTHLY"</code> is missing, it will create it. It then writes the standard 12-column header row in Row 3 (MONTH, STATUS, PO STATUS, etc.), applies a bold font with a gold highlight fill (<code>#FFC000</code>), centers alignment, and applies <strong>Text</strong> number formatting to all data cells to protect them.</li>
+          <li>Click <strong>Cancel</strong> at any time to hide the generator panel.</li>
+        </ol>
+
+        <!-- Step 7: Manual Re-Format -->
+        <h3 style="margin-top: 28px; margin-bottom: 12px; font-family: var(--font-heading); font-size: 18px; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-arrows-spin text-primary"></i> 7. Manual Formatting & Sorting
+        </h3>
+        <p>
+          Since automatic sorting/formatting on startup has been disabled to prevent unsolicited changes to your spreadsheet, you can trigger formatting manually at your convenience:
+        </p>
+        <ol style="margin-left: 20px; margin-bottom: 16px; color: var(--text-muted); display: flex; flex-direction: column; gap: 8px;">
+          <li>Scroll to the bottom of the list panel (Monthly Master or Annual Master).</li>
+          <li>Click the grey <strong>Re-Sort & Format Sheet</strong> button.</li>
+          <li>The loader will state <em>"Consolidating monthly master sheet columns..."</em>. It reads all data, cleans validation formats, sorts the rows based on status and start dates, writes them back, applies the pastel highlight colors, and automatically runs a column auto-fit to adjust widths.</li>
         </ol>
       </section>
 
