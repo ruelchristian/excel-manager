@@ -447,14 +447,14 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     
     if (hasData) {
       if (statusLower === "" || statusLower === "none" || statusLower === "null" || statusLower === "undefined") {
-        values[i][0] = "Active";
+        values[i][0] = "ACTIVE";
       } else if (statusLower === "complete license" || statusLower.indexOf("complete") !== -1) {
-        values[i][0] = "Complete";
+        values[i][0] = "COMPLETE";
       } else if (statusLower.indexOf("cancel") !== -1) {
-        values[i][0] = "Cancelled";
+        values[i][0] = "CANCELLED";
       } else {
         if (rawStatus) {
-          values[i][0] = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+          values[i][0] = rawStatus.toUpperCase();
         }
       }
     } else {
@@ -535,7 +535,8 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   let clearRangeBelow = sheet.getRange("A" + (newLastRowIndex + 1) + ":F10000");
   clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
 
-  // Format the header/title row A4:F4 with Orange color and bold font
+  // Set A4 header to STATUS and format the header/title row A4:F4 with Orange color and bold font
+  sheet.getRange("A4").setValue("STATUS");
   let headerRange = sheet.getRange("A4:F4");
   headerRange.getFormat().getFill().setColor("#FFC000");
   headerRange.getFormat().getFont().setBold(true);

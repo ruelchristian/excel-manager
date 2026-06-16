@@ -64,9 +64,9 @@ function switchTab(tabName) {
         '<option value="Cancelled">Cancelled</option>';
     } else {
       statusSelect.innerHTML = 
-        '<option value="Active">Active</option>' +
-        '<option value="Complete">Complete</option>' +
-        '<option value="Cancelled">Cancelled</option>';
+        '<option value="ACTIVE">ACTIVE</option>' +
+        '<option value="COMPLETE">COMPLETE</option>' +
+        '<option value="CANCELLED">CANCELLED</option>';
     }
     if (currentVal) statusSelect.value = currentVal;
     
@@ -805,14 +805,14 @@ async function sortSubscriptions() {
           
           if (hasData) {
             if (statusLower === "" || statusLower === "none" || statusLower === "null" || statusLower === "undefined") {
-              values[i][0] = "Active";
+              values[i][0] = "ACTIVE";
             } else if (statusLower === "complete license" || statusLower.indexOf("complete") !== -1) {
-              values[i][0] = "Complete";
+              values[i][0] = "COMPLETE";
             } else if (statusLower.indexOf("cancel") !== -1) {
-              values[i][0] = "Cancelled";
+              values[i][0] = "CANCELLED";
             } else {
               if (rawStatus) {
-                values[i][0] = rawStatus.charAt(0).toUpperCase() + rawStatus.slice(1);
+                values[i][0] = rawStatus.toUpperCase();
               }
             }
           } else {
@@ -937,6 +937,16 @@ async function sortSubscriptions() {
         }
       } else {
         // Annual Master
+        var cellA4 = sheet.getRange("A4");
+        cellA4.values = [["STATUS"]];
+        
+        var headerRange = sheet.getRange("A4:F4");
+        headerRange.format.fill.color = "#FFC000";
+        headerRange.format.font.bold = true;
+        
+        var dataRange = sheet.getRange("A4:F10000");
+        dataRange.format.horizontalAlignment = "Center";
+        
         // Set number formats BEFORE writing values to prevent Excel date auto-conversion
         var textRangeA = sheet.getRange("A5:A10000");
         textRangeA.numberFormat = "@";
