@@ -895,19 +895,21 @@ async function sortSubscriptions() {
       var colLetter = currentListType === 'monthly' ? "L" : "F";
 
       if (currentListType === 'monthly') {
-        // Clear any existing validations in columns A to L
+        // Clear any existing validations in columns A to L below header
         var clearValRange = sheet.getRange("A4:L10000");
         clearValRange.dataValidation.clear();
 
-        // Set number formats BEFORE writing values to prevent Excel date auto-conversion
-        var textRangeAC = sheet.getRange("A4:C10000");
-        textRangeAC.numberFormat = "@";
-        var numRangeDE = sheet.getRange("D4:E10000");
-        numRangeDE.numberFormat = "General";
-        var dateRangeFG = sheet.getRange("F4:G10000");
-        dateRangeFG.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
-        var textRangeHL = sheet.getRange("H4:L10000");
-        textRangeHL.numberFormat = "@";
+        if (newLastRowIndex >= 4) {
+          // Set number formats BEFORE writing values to prevent Excel date auto-conversion
+          var textRangeAC = sheet.getRange("A4:C" + newLastRowIndex);
+          textRangeAC.numberFormat = "@";
+          var numRangeDE = sheet.getRange("D4:E" + newLastRowIndex);
+          numRangeDE.numberFormat = "General";
+          var dateRangeFG = sheet.getRange("F4:G" + newLastRowIndex);
+          dateRangeFG.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
+          var textRangeHL = sheet.getRange("H4:L" + newLastRowIndex);
+          textRangeHL.numberFormat = "@";
+        }
         await context.sync();
 
         if (activeRowCount > 0) {
@@ -944,16 +946,20 @@ async function sortSubscriptions() {
         headerRange.format.fill.color = "#FFC000";
         headerRange.format.font.bold = true;
         
-        var dataRange = sheet.getRange("A4:F10000");
-        dataRange.format.horizontalAlignment = "Center";
+        if (newLastRowIndex >= 4) {
+          var dataRange = sheet.getRange("A4:F" + newLastRowIndex);
+          dataRange.format.horizontalAlignment = "Center";
+        }
         
-        // Set number formats BEFORE writing values to prevent Excel date auto-conversion
-        var textRangeA = sheet.getRange("A5:A10000");
-        textRangeA.numberFormat = "@";
-        var dateRangeBC = sheet.getRange("B5:C10000");
-        dateRangeBC.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
-        var textRangeDF = sheet.getRange("D5:F10000");
-        textRangeDF.numberFormat = "@";
+        if (newLastRowIndex >= 5) {
+          // Set number formats BEFORE writing values to prevent Excel date auto-conversion
+          var textRangeA = sheet.getRange("A5:A" + newLastRowIndex);
+          textRangeA.numberFormat = "@";
+          var dateRangeBC = sheet.getRange("B5:C" + newLastRowIndex);
+          dateRangeBC.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
+          var textRangeDF = sheet.getRange("D5:F" + newLastRowIndex);
+          textRangeDF.numberFormat = "@";
+        }
         await context.sync();
 
         if (newLastRowIndex < 10000) {
@@ -1021,14 +1027,16 @@ async function formatSheetColorsDirect(sheet, values) {
     headerRange.format.fill.color = "#FFC000";
     headerRange.format.font.bold = true;
     
-    var dataRange = sheet.getRange("A3:L10000");
+    var lastRow = values.length >= 1 ? values.length + 3 : 3;
+    var dataRange = sheet.getRange("A3:L" + lastRow);
     dataRange.format.horizontalAlignment = "Center";
   } else {
     var headerRange = sheet.getRange("A4:F4");
     headerRange.format.fill.color = "#FFC000";
     headerRange.format.font.bold = true;
     
-    var dataRange = sheet.getRange("A4:F10000");
+    var lastRow = values.length >= 1 ? values.length + 4 : 4;
+    var dataRange = sheet.getRange("A4:F" + lastRow);
     dataRange.format.horizontalAlignment = "Center";
   }
 
@@ -1605,8 +1613,9 @@ async function generateMonthlySheet() {
         formatCancelled.custom.format.fill.color = colorCancelled;
         formatCancelled.custom.format.font.color = "#000000";
         
-        // Set horizontal alignment to Center for columns B to H (headers and data)
-        targetSheet.getRange("B6:H10000").format.horizontalAlignment = "Center";
+        // Set horizontal alignment to Center for columns B to H (headers and data) up to target row
+        var generatorLastRow = 6 + rowsToWrite.length;
+        targetSheet.getRange("B6:H" + generatorLastRow).format.horizontalAlignment = "Center";
         
         // Auto-fit columns B to H based only on the table range to prevent sheet titles from making columns wider
         targetSheet.getRange("B6:H" + (6 + rowsToWrite.length)).format.autofitColumns();

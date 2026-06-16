@@ -206,14 +206,16 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     return nameA.localeCompare(nameB);
   });
   
-  // Set number formats for columns BEFORE writing values to prevent Excel date auto-conversion
-  sheet.getRange("A4:C10000").setNumberFormatLocal("@");
-  sheet.getRange("D4:E10000").setNumberFormatLocal("General");
-  sheet.getRange("F4:G10000").setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
-  sheet.getRange("H4:L10000").setNumberFormatLocal("@");
-
   // Clear any existing validations in columns A to L
   sheet.getRange("A4:L10000").getDataValidation().clear();
+
+  if (newLastRowIndex >= 4) {
+    // Set number formats for columns BEFORE writing values to prevent Excel date auto-conversion
+    sheet.getRange("A4:C" + newLastRowIndex).setNumberFormatLocal("@");
+    sheet.getRange("D4:E" + newLastRowIndex).setNumberFormatLocal("General");
+    sheet.getRange("F4:G" + newLastRowIndex).setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
+    sheet.getRange("H4:L" + newLastRowIndex).setNumberFormatLocal("@");
+  }
 
   if (activeRowCount > 0) {
     let writeRange = sheet.getRange("A4:L" + newLastRowIndex);
@@ -270,7 +272,8 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
   headerRange.getFormat().getFont().setBold(true);
 
   // Set horizontal alignment to Center for the entire range (headers + data)
-  sheet.getRange("A3:L10000").getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
+  let alignLastRow = Math.max(3, newLastRowIndex);
+  sheet.getRange("A3:L" + alignLastRow).getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
   // Auto-fit all columns to prevent text truncation
   sheet.getUsedRange().getFormat().getAutofitColumns();
@@ -501,9 +504,11 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   });
   
   // Set number formats for dates and text in Annual sheet BEFORE writing values
-  sheet.getRange("B5:C10000").setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
-  sheet.getRange("A5:A10000").setNumberFormatLocal("@");
-  sheet.getRange("D5:F10000").setNumberFormatLocal("@");
+  if (newLastRowIndex >= 5) {
+    sheet.getRange("B5:C" + newLastRowIndex).setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
+    sheet.getRange("A5:A" + newLastRowIndex).setNumberFormatLocal("@");
+    sheet.getRange("D5:F" + newLastRowIndex).setNumberFormatLocal("@");
+  }
 
   if (activeRowCount > 0) {
     let writeRange = sheet.getRange("A5:F" + newLastRowIndex);
@@ -542,7 +547,8 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   headerRange.getFormat().getFont().setBold(true);
 
   // Set horizontal alignment to Center for the entire range (headers + data)
-  sheet.getRange("A4:F10000").getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
+  let alignLastRow = Math.max(4, newLastRowIndex);
+  sheet.getRange("A4:F" + alignLastRow).getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
   // Auto-fit all columns to prevent text truncation
   sheet.getUsedRange().getFormat().getAutofitColumns();
