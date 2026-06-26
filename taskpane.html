@@ -40,6 +40,9 @@
       --badge-completed-bg: #93c5fd;
       --badge-cancelled-text: #991b1b;
       --badge-cancelled-bg: #fca5a5;
+      --badge-not-active-text: #475569;
+      --badge-not-active-bg: #cbd5e1;
+      --color-slate: #475569;
 
       --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.02);
     }
@@ -349,11 +352,17 @@
       border-color: #fca5a5; 
       border-left: 4px solid var(--color-red); 
     }
+    .card.status-not-active { 
+      background-color: #f1f5f9; 
+      border-color: #cbd5e1; 
+      border-left: 4px solid var(--color-slate); 
+    }
 
     .card.status-completed:hover { border-color: #60a5fa; }
     .card.status-new:hover { border-color: #facc15; }
     .card.status-renewal:hover { border-color: #4ade80; }
     .card.status-cancelled:hover { border-color: #f87171; }
+    .card.status-not-active:hover { border-color: #94a3b8; }
 
     .card-header {
       display: flex;
@@ -409,6 +418,7 @@
     .badge-new { background-color: var(--badge-new-bg); color: var(--badge-new-text); }
     .badge-renewal { background-color: var(--badge-renewal-bg); color: var(--badge-renewal-text); }
     .badge-cancelled { background-color: var(--badge-cancelled-bg); color: var(--badge-cancelled-text); }
+    .badge-not-active { background-color: var(--badge-not-active-bg); color: var(--badge-not-active-text); }
 
     .card-details {
       font-size: 11px;
@@ -528,6 +538,12 @@
       color: var(--badge-cancelled-text);
       border-color: #fca5a5;
       box-shadow: 0 2px 4px rgba(185, 28, 28, 0.05);
+    }
+    .pill.status-not-active.active {
+      background-color: var(--badge-not-active-bg);
+      color: var(--badge-not-active-text);
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 4px rgba(71, 85, 105, 0.05);
     }
 
     /* Pagination Styles */
@@ -782,6 +798,7 @@
       <span class="pill status-renewal" onclick="setStatusFilter('renewal')">RENEWAL</span>
       <span class="pill status-completed" onclick="setStatusFilter('complete')">COMPLETE</span>
       <span class="pill status-cancelled" onclick="setStatusFilter('cancelled')">CANCELLED</span>
+      <span class="pill status-not-active" onclick="setStatusFilter('not active')">NOT ACTIVE</span>
     </div>
     
     <div id="loader" class="loading">Initializing Excel connection...</div>
@@ -894,6 +911,7 @@
             <option value="Renewal">Renewal</option>
             <option value="Complete">Complete</option>
             <option value="Cancelled">Cancelled</option>
+            <option value="Not Active">Not Active</option>
           </select>
         </div>
         <div class="form-group" id="monthly-fields-postatus">

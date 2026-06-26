@@ -14,6 +14,14 @@ function main(workbook: ExcelScript.Workbook) {
   } else {
     console.log('Sheet "ADB MASTER LIST ANNUAL" not found.');
   }
+
+  // 3. Process PAYMENT STATUS
+  let paymentSheet = workbook.getWorksheet("PAYMENT STATUS");
+  if (paymentSheet) {
+    sortPaymentStatus(paymentSheet);
+  } else {
+    console.log('Sheet "PAYMENT STATUS" not found.');
+  }
 }
 
 function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
@@ -172,7 +180,8 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     'new': 1,
     'renewal': 2,
     'complete': 3,
-    'cancelled': 4
+    'cancelled': 4,
+    'not active': 5
   };
   
   let getTime = function(val: any) {
@@ -225,6 +234,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     let colorRenewal = '#bbf7d0';    // Soft Green
     let colorComplete = '#bfdbfe';   // Soft Blue
     let colorCancelled = '#fecaca';  // Soft Red
+    let colorNotActive = '#e2e8f0';  // Soft Grey
     let colorDefault = '#ffffff';    // White
     
     for (let i = 0; i < values.length; i++) {
@@ -239,6 +249,8 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
         rowColor = colorComplete;
       } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
         rowColor = colorCancelled;
+      } else if (status === 'not active' || status.indexOf('not active') !== -1) {
+        rowColor = colorNotActive;
       }
       
       let rowRange = sheet.getRange("A" + (i + 4) + ":L" + (i + 4));
@@ -249,7 +261,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     statusRange.getDataValidation().setRule({
       list: {
         inCellDropDown: true,
-        source: "New,Renewal,Complete,Cancelled"
+        source: "New,Renewal,Complete,Cancelled,Not Active"
       }
     });
 
@@ -257,7 +269,7 @@ function sortAndColorMonthly(sheet: ExcelScript.Worksheet) {
     poRange.getDataValidation().setRule({
       list: {
         inCellDropDown: true,
-        source: "PO Done,PO Pending"
+        source: "PO Done,PO Pending,N/A"
       }
     });
   }
@@ -396,6 +408,8 @@ function parseStatusField(rawStatus: any, endDateVal: any) {
     status = 'Complete';
   } else if (statusStr.includes('cancel')) {
     status = 'Cancelled';
+  } else if (statusStr.includes('not active')) {
+    status = 'Not Active';
   } else {
     status = 'Complete';
   }
@@ -421,13 +435,13 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   let lastRowIndex = lastRowRange.getRowIndex() + 1;
   if (lastRowIndex < 5) return;
   
-  let range = sheet.getRange("A5:F" + lastRowIndex);
+  let range = sheet.getRange("A5:G" + lastRowIndex);
   let values = range.getValues();
 
-  // Filter out empty rows (where EU Name (index 3) and Subscription (index 5) are both blank)
+  // Filter out empty rows (where EU Name (index 4) and Subscription (index 6) are both blank)
   values = values.filter(row => {
-    let eu = String(row[3] || '').trim();
-    let sub = String(row[5] || '').trim();
+    let eu = String(row[4] || '').trim();
+    let sub = String(row[6] || '').trim();
     return eu !== '' || sub !== '';
   });
 
@@ -439,9 +453,9 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     let rawStatus = String(values[i][0] || '').trim();
     let statusLower = rawStatus.toLowerCase();
     
-    // Check if the row has any actual data (Columns B to F / index 1 to 5)
+    // Check if the row has any actual data (Columns B to G / index 1 to 6)
     let hasData = false;
-    for (let col = 1; col < 6; col++) {
+    for (let col = 1; col < 7; col++) {
       if (values[i][col] !== null && String(values[i][col]).trim() !== "") {
         hasData = true;
         break;
@@ -455,6 +469,8 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
         values[i][0] = "COMPLETE";
       } else if (statusLower.indexOf("cancel") !== -1) {
         values[i][0] = "CANCELLED";
+      } else if (statusLower.indexOf("not active") !== -1) {
+        values[i][0] = "NOT ACTIVE";
       } else {
         if (rawStatus) {
           values[i][0] = rawStatus.toUpperCase();
@@ -469,7 +485,8 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   let statusWeights: { [key: string]: number } = {
     'active': 1,
     'complete': 2,
-    'cancelled': 3
+    'cancelled': 3,
+    'not active': 4
   };
   
   let getTime = function(val: string | number | boolean) {
@@ -484,39 +501,40 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
     // 1. Status (Index 0)
     let statusA = String(a[0] || '').trim().toLowerCase();
     let statusB = String(b[0] || '').trim().toLowerCase();
-    let weightStatusA = statusWeights[statusA] || 4;
-    let weightStatusB = statusWeights[statusB] || 4;
+    let weightStatusA = statusWeights[statusA] || 5;
+    let weightStatusB = statusWeights[statusB] || 5;
     if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
     
-    // 2. Start Date (Index 1) - Descending
-    let timeA = getTime(a[1]);
-    let timeB = getTime(b[1]);
+    // 2. Start Date (Index 2) - Descending
+    let timeA = getTime(a[2]);
+    let timeB = getTime(b[2]);
     if (timeA !== timeB) {
       if (timeA === 0) return 1;
       if (timeB === 0) return -1;
       return timeB - timeA;
     }
     
-    // 3. EU Name (Index 3)
-    let nameA = String(a[3] || '').trim().toLowerCase();
-    let nameB = String(b[3] || '').trim().toLowerCase();
+    // 3. EU Name (Index 4)
+    let nameA = String(a[4] || '').trim().toLowerCase();
+    let nameB = String(b[4] || '').trim().toLowerCase();
     return nameA.localeCompare(nameB);
   });
   
   // Set number formats for dates and text in Annual sheet BEFORE writing values
   if (newLastRowIndex >= 5) {
-    sheet.getRange("B5:C" + newLastRowIndex).setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
-    sheet.getRange("A5:A" + newLastRowIndex).setNumberFormatLocal("@");
-    sheet.getRange("D5:F" + newLastRowIndex).setNumberFormatLocal("@");
+    sheet.getRange("C5:D" + newLastRowIndex).setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
+    sheet.getRange("A5:B" + newLastRowIndex).setNumberFormatLocal("@");
+    sheet.getRange("E5:G" + newLastRowIndex).setNumberFormatLocal("@");
   }
 
   if (activeRowCount > 0) {
-    let writeRange = sheet.getRange("A5:F" + newLastRowIndex);
+    let writeRange = sheet.getRange("A5:G" + newLastRowIndex);
     writeRange.setValues(values);
     
     let colorActive = '#fef08a';       // Soft Yellow
     let colorComplete = '#bfdbfe';     // Soft Blue
     let colorCancelled = '#fecaca';    // Soft Red
+    let colorNotActive = '#e2e8f0';    // Soft Grey
     let colorDefault = '#ffffff';
     
     for (let i = 0; i < values.length; i++) {
@@ -529,31 +547,148 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
         rowColor = colorComplete;
       } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
         rowColor = colorCancelled;
+      } else if (status === 'not active' || status.indexOf('not active') !== -1) {
+        rowColor = colorNotActive;
       }
       
-      let rowRange = sheet.getRange("A" + (i + 5) + ":F" + (i + 5));
+      let rowRange = sheet.getRange("A" + (i + 5) + ":G" + (i + 5));
       rowRange.getFormat().getFill().setColor(rowColor);
     }
+
+    // Set validations on STATUS and PO STATUS
+    let statusRange = sheet.getRange("A5:A" + newLastRowIndex);
+    statusRange.getDataValidation().setRule({
+      list: {
+        inCellDropDown: true,
+        source: "ACTIVE,COMPLETE,CANCELLED,NOT ACTIVE"
+      }
+    });
+
+    let poRange = sheet.getRange("B5:B" + newLastRowIndex);
+    poRange.getDataValidation().setRule({
+      list: {
+        inCellDropDown: true,
+        source: "PO Done,PO Pending,N/A"
+      }
+    });
   }
 
   // Clear everything below the active rows to prevent infinite scroll/formatting artifacts
-  let clearRangeBelow = sheet.getRange("A" + (newLastRowIndex + 1) + ":F10000");
+  let clearRangeBelow = sheet.getRange("A" + (newLastRowIndex + 1) + ":G10000");
   clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
 
-  // Set A4 header to STATUS and format the header/title row A4:F4 with Orange color and bold font
-  sheet.getRange("A4").setValue("STATUS");
-  let headerRange = sheet.getRange("A4:F4");
+  // Set headers and format the header/title row A4:G4 with Orange color and bold font
+  let headerRange = sheet.getRange("A4:G4");
+  headerRange.setValues([["STATUS", "PO STATUS", "START DATE", "END DATE", "EU", "FA/SO", "SUBSCRIPTION"]]);
   headerRange.getFormat().getFill().setColor("#FFC000");
   headerRange.getFormat().getFont().setBold(true);
 
   // Set horizontal alignment to Center for the entire range (headers + data)
   let alignLastRow = Math.max(4, newLastRowIndex);
-  sheet.getRange("A4:F" + alignLastRow).getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
+  sheet.getRange("A4:G" + alignLastRow).getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
   
   // Auto-fit all columns to prevent text truncation
   sheet.getUsedRange().getFormat().getAutofitColumns();
 
   console.log("Annual Master sheet sorted and colored successfully.");
+}
+
+function sortPaymentStatus(sheet: ExcelScript.Worksheet) {
+  let rangeUsed = sheet.getUsedRange();
+  if (!rangeUsed) return;
+  
+  let lastRowRange = rangeUsed.getLastRow();
+  let lastRowIndex = lastRowRange.getRowIndex() + 1;
+  if (lastRowIndex < 8) return;
+  
+  let range = sheet.getRange("B8:G" + lastRowIndex);
+  let values = range.getValues();
+
+  // Filter out empty rows (where STATUS (index 0) and EU (index 3) are both blank)
+  values = values.filter(row => {
+    let status = String(row[0] || '').trim();
+    let eu = String(row[3] || '').trim();
+    return status !== '' || eu !== '';
+  });
+
+  let activeRowCount = values.length;
+  let newLastRowIndex = activeRowCount >= 1 ? 7 + activeRowCount : 7;
+
+  let statusWeights: { [key: string]: number } = {
+    'not paid': 1,
+    'paid': 2,
+    'cancelled': 3
+  };
+  
+  let getTime = function(val: string | number | boolean) {
+    if (typeof val === 'number') return val;
+    if (!val) return 0;
+    let parsed = new Date(val as string).getTime();
+    return isNaN(parsed) ? 0 : parsed;
+  };
+
+  // Sort values: Status -> Date (Oldest to Newest) -> EU Name
+  values.sort((a, b) => {
+    // 1. Status (Index 0)
+    let statusA = String(a[0] || '').trim().toLowerCase();
+    let statusB = String(b[0] || '').trim().toLowerCase();
+    let weightStatusA = statusWeights[statusA] || 4;
+    let weightStatusB = statusWeights[statusB] || 4;
+    if (weightStatusA !== weightStatusB) return weightStatusA - weightStatusB;
+    
+    // 2. Date (Index 1) - Ascending
+    let timeA = getTime(a[1]);
+    let timeB = getTime(b[1]);
+    if (timeA !== timeB) {
+      if (timeA === 0) return 1;
+      if (timeB === 0) return -1;
+      return timeA - timeB;
+    }
+    
+    // 3. EU Name (Index 3)
+    let nameA = String(a[3] || '').trim().toLowerCase();
+    let nameB = String(b[3] || '').trim().toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
+
+  // Clear data range validations first
+  sheet.getRange("B8:G10000").getDataValidation().clear();
+
+  // Clear cells below new last row index to prevent residue
+  if (newLastRowIndex < 10000) {
+    let clearRangeBelow = sheet.getRange("B" + (newLastRowIndex + 1) + ":G10000");
+    clearRangeBelow.clear(ExcelScript.ClearApplyTo.all);
+  }
+  
+  if (activeRowCount > 0) {
+    // Set number formats for B8:G before writing values
+    sheet.getRange("B8:B" + newLastRowIndex).setNumberFormatLocal("@");
+    sheet.getRange("C8:C" + newLastRowIndex).setNumberFormatLocal("[$-809]dddd\\,d\\ mmmm\\ yyyy;@");
+    sheet.getRange("D8:D" + newLastRowIndex).setNumberFormatLocal("General");
+    sheet.getRange("E8:G" + newLastRowIndex).setNumberFormatLocal("@");
+
+    let writeRange = sheet.getRange("B8:G" + newLastRowIndex);
+    writeRange.setValues(values);
+    
+    // Set validation rule on STATUS column
+    let statusRange = sheet.getRange("B8:B" + newLastRowIndex);
+    let validation = statusRange.getDataValidation();
+    validation.setRule({
+      list: {
+        inCellDropDown: true,
+        source: "NOT PAID,PAID,CANCELLED"
+      }
+    });
+  }
+
+  // Set horizontal alignment to Center for the range (headers + data)
+  let alignLastRow = Math.max(7, newLastRowIndex);
+  sheet.getRange("B7:G" + alignLastRow).getFormat().setHorizontalAlignment(ExcelScript.HorizontalAlignment.center);
+  
+  // Auto-fit all columns to prevent text truncation
+  sheet.getUsedRange().getFormat().getAutofitColumns();
+
+  console.log("PAYMENT STATUS sheet sorted successfully.");
 }
 
 function cleanRTValue(val: any): string {

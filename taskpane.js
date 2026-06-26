@@ -61,12 +61,14 @@ function switchTab(tabName) {
         '<option value="New">New</option>' +
         '<option value="Renewal">Renewal</option>' +
         '<option value="Complete">Complete</option>' +
-        '<option value="Cancelled">Cancelled</option>';
+        '<option value="Cancelled">Cancelled</option>' +
+        '<option value="Not Active">Not Active</option>';
     } else {
       statusSelect.innerHTML = 
         '<option value="ACTIVE">ACTIVE</option>' +
         '<option value="COMPLETE">COMPLETE</option>' +
-        '<option value="CANCELLED">CANCELLED</option>';
+        '<option value="CANCELLED">CANCELLED</option>' +
+        '<option value="NOT ACTIVE">NOT ACTIVE</option>';
     }
     if (currentVal) statusSelect.value = currentVal;
     
@@ -86,12 +88,12 @@ function switchTab(tabName) {
       document.getElementById('monthly-fields-group1').style.display = 'none';
       document.getElementById('monthly-fields-group2').style.display = 'none';
       document.getElementById('monthly-fields-month').style.display = 'none';
-      document.getElementById('monthly-fields-postatus').style.display = 'none';
+      document.getElementById('monthly-fields-postatus').style.display = 'block'; // Show PO status dropdown for Annual too
       document.getElementById('annual-fields-faso').style.display = 'block';
       
       // Remove required attributes
       document.getElementById('form-month').removeAttribute('required');
-      document.getElementById('form-po-status').removeAttribute('required');
+      document.getElementById('form-po-status').setAttribute('required', 'required'); // Required for Annual too
       document.getElementById('form-fa-so').setAttribute('required', 'required');
     }
   }
@@ -192,8 +194,8 @@ async function loadSubscriptions() {
         return;
       }
 
-      // Read columns (12 columns for Monthly, 6 columns for Annual)
-      var rangeColLetter = currentListType === 'monthly' ? "L" : "F";
+      // Read columns (12 columns for Monthly, 7 columns for Annual)
+      var rangeColLetter = currentListType === 'monthly' ? "L" : "G";
       var range = sheet.getRange("A" + startRow + ":" + rangeColLetter + lastRowIndex);
       range.load(["values", "text"]);
       await context.sync();
@@ -228,16 +230,17 @@ async function loadSubscriptions() {
           });
         } else {
           // Annual
-          if (!rowVal[3] && !rowVal[5]) continue;
+          if (!rowVal[4] && !rowVal[6]) continue;
 
           records.push({
             rowNum: rowNum,
             status: String(rowVal[0] || '').trim(),
-            startDate: parseExcelDate(rowVal[1], rowText[1]),
-            endDate: parseExcelDate(rowVal[2], rowText[2]),
-            eu: String(rowVal[3] || '').trim(),
-            fa_so: String(rowVal[4] || '').trim(),
-            subscription: String(rowVal[5] || '').trim()
+            poStatus: String(rowVal[1] || '').trim(),
+            startDate: parseExcelDate(rowVal[2], rowText[2]),
+            endDate: parseExcelDate(rowVal[3], rowText[3]),
+            eu: String(rowVal[4] || '').trim(),
+            fa_so: String(rowVal[5] || '').trim(),
+            subscription: String(rowVal[6] || '').trim()
           });
         }
       }
@@ -284,6 +287,10 @@ function renderList(records) {
       cardClass = 'status-cancelled';
       badgeClass = 'badge-cancelled';
       statusLabel = 'CANCELLED';
+    } else if (statusLower === 'not active' || statusLower.indexOf('not active') !== -1) {
+      cardClass = 'status-not-active';
+      badgeClass = 'badge-not-active';
+      statusLabel = 'NOT ACTIVE';
     }
 
     var card = document.createElement('div');
@@ -324,7 +331,7 @@ function renderList(records) {
           '</div>' +
         '</div>' +
         '<div class="card-footer">' +
-          '<span>Billing: <strong>Annual</strong></span>' +
+          '<span>PO: <strong>' + (rec.poStatus || 'N/A') + '</strong></span>' +
           '<span>Expiry: <strong>' + (rec.endDate || 'N/A') + '</strong></span>' +
         '</div>';
     }
@@ -399,6 +406,7 @@ function editRecord(rec) {
     document.getElementById('form-po-status').value = rec.poStatus ? rec.poStatus : 'N/A';
   } else {
     document.getElementById('form-fa-so').value = rec.fa_so;
+    document.getElementById('form-po-status').value = rec.poStatus ? rec.poStatus : 'N/A';
   }
 
   if (startPicker) startPicker.setDate(rec.startDate);
@@ -466,6 +474,7 @@ async function saveRecord(e) {
     formData.subId = document.getElementById('form-sub-id').value;
   } else {
     formData.fa_so = document.getElementById('form-fa-so').value;
+    formData.poStatus = document.getElementById('form-po-status').value;
   }
 
   try {
@@ -477,7 +486,7 @@ async function saveRecord(e) {
 
       if (rowNum) {
         // Edit existing
-        var colLetter = currentListType === 'monthly' ? "L" : "F";
+        var colLetter = currentListType === 'monthly' ? "L" : "G";
         range = sheet.getRange("A" + rowNum + ":" + colLetter + rowNum);
       } else {
         // Append at end
@@ -488,7 +497,7 @@ async function saveRecord(e) {
         
         var nextRow = lastRowRange.rowIndex + 2; // Index is 0-based
         if (nextRow < startRow) nextRow = startRow;
-        var colLetter = currentListType === 'monthly' ? "L" : "F";
+        var colLetter = currentListType === 'monthly' ? "L" : "G";
         range = sheet.getRange("A" + nextRow + ":" + colLetter + nextRow);
       }
 
@@ -509,9 +518,10 @@ async function saveRecord(e) {
           formData.subscription
         ]];
       } else {
-        range.numberFormat = [["@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "@", "@", "@"]];
+        range.numberFormat = [["@", "@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "@", "@", "@"]];
         range.values = [[
           formData.status,
+          formData.poStatus,
           formData.startDate,
           formData.endDate,
           formData.eu,
@@ -777,14 +787,14 @@ async function sortSubscriptions() {
         newLastRowIndex = activeRowCount >= 1 ? 3 + activeRowCount : 3;
       } else {
         // Annual Master
-        var range = sheet.getRange("A" + startRow + ":F" + lastRowIndex);
+        var range = sheet.getRange("A" + startRow + ":G" + lastRowIndex);
         range.load("values");
         await context.sync();
         values = range.values;
 
         values = values.filter(function(row) {
-          var eu = String(row[3] || '').trim();
-          var sub = String(row[5] || '').trim();
+          var eu = String(row[4] || '').trim();
+          var sub = String(row[6] || '').trim();
           return eu !== '' || sub !== '';
         });
         activeRowCount = values.length;
@@ -796,7 +806,7 @@ async function sortSubscriptions() {
           var statusLower = rawStatus.toLowerCase();
           
           var hasData = false;
-          for (var col = 1; col < 6; col++) {
+          for (var col = 1; col < 7; col++) {
             if (values[i][col] !== null && String(values[i][col]).trim() !== "") {
               hasData = true;
               break;
@@ -810,6 +820,8 @@ async function sortSubscriptions() {
               values[i][0] = "COMPLETE";
             } else if (statusLower.indexOf("cancel") !== -1) {
               values[i][0] = "CANCELLED";
+            } else if (statusLower.indexOf("not active") !== -1) {
+              values[i][0] = "NOT ACTIVE";
             } else {
               if (rawStatus) {
                 values[i][0] = rawStatus.toUpperCase();
@@ -826,7 +838,8 @@ async function sortSubscriptions() {
         'renewal': 2,
         'active': 1,
         'complete': currentListType === 'monthly' ? 3 : 2,
-        'cancelled': currentListType === 'monthly' ? 4 : 3
+        'cancelled': currentListType === 'monthly' ? 4 : 3,
+        'not active': currentListType === 'monthly' ? 5 : 4
       };
 
       // Custom multi-tier sort
@@ -875,24 +888,24 @@ async function sortSubscriptions() {
             return isNaN(parsed) ? 0 : parsed;
           };
 
-          // 2. Start Date (Index 1) - Descending
-          var timeA = getTime(a[1]);
-          var timeB = getTime(b[1]);
+          // 2. Start Date (Index 2) - Descending
+          var timeA = getTime(a[2]);
+          var timeB = getTime(b[2]);
           if (timeA !== timeB) {
             if (timeA === 0) return 1;
             if (timeB === 0) return -1;
             return timeB - timeA;
           }
           
-          // 3. EU Name (Index 3)
-          var nameA = String(a[3] || '').trim().toLowerCase();
-          var nameB = String(b[3] || '').trim().toLowerCase();
+          // 3. EU Name (Index 4)
+          var nameA = String(a[4] || '').trim().toLowerCase();
+          var nameB = String(b[4] || '').trim().toLowerCase();
           return nameA.localeCompare(nameB);
         }
       });
 
       // Overwrite cells
-      var colLetter = currentListType === 'monthly' ? "L" : "F";
+      var colLetter = currentListType === 'monthly' ? "L" : "G";
 
       if (currentListType === 'monthly') {
         // Clear any existing validations in columns A to L below header
@@ -917,7 +930,7 @@ async function sortSubscriptions() {
           statusRange.dataValidation.rule = {
             list: {
               inCellDropDown: true,
-              source: "New,Renewal,Complete,Cancelled"
+              source: "New,Renewal,Complete,Cancelled,Not Active"
             }
           };
           
@@ -925,7 +938,7 @@ async function sortSubscriptions() {
           poRange.dataValidation.rule = {
             list: {
               inCellDropDown: true,
-              source: "PO Done,PO Pending"
+              source: "PO Done,PO Pending,N/A"
             }
           };
           await context.sync();
@@ -939,31 +952,54 @@ async function sortSubscriptions() {
         }
       } else {
         // Annual Master
-        var cellA4 = sheet.getRange("A4");
-        cellA4.values = [["STATUS"]];
-        
-        var headerRange = sheet.getRange("A4:F4");
+        // Set all headers for Annual
+        var annualHeaders = [["STATUS", "PO STATUS", "START DATE", "END DATE", "EU", "FA/SO", "SUBSCRIPTION"]];
+        var headerRange = sheet.getRange("A4:G4");
+        headerRange.values = annualHeaders;
         headerRange.format.fill.color = "#FFC000";
         headerRange.format.font.bold = true;
         
         if (newLastRowIndex >= 4) {
-          var dataRange = sheet.getRange("A4:F" + newLastRowIndex);
+          var dataRange = sheet.getRange("A4:G" + newLastRowIndex);
           dataRange.format.horizontalAlignment = "Center";
         }
         
         if (newLastRowIndex >= 5) {
           // Set number formats BEFORE writing values to prevent Excel date auto-conversion
-          var textRangeA = sheet.getRange("A5:A" + newLastRowIndex);
-          textRangeA.numberFormat = "@";
-          var dateRangeBC = sheet.getRange("B5:C" + newLastRowIndex);
-          dateRangeBC.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
-          var textRangeDF = sheet.getRange("D5:F" + newLastRowIndex);
-          textRangeDF.numberFormat = "@";
+          var textRangeAB = sheet.getRange("A5:B" + newLastRowIndex);
+          textRangeAB.numberFormat = "@";
+          var dateRangeCD = sheet.getRange("C5:D" + newLastRowIndex);
+          dateRangeCD.numberFormat = "[$-809]dddd\\,d\\ mmmm\\ yyyy;@";
+          var textRangeEG = sheet.getRange("E5:G" + newLastRowIndex);
+          textRangeEG.numberFormat = "@";
         }
         await context.sync();
 
+        // Clear any existing validations in columns A to G below header
+        var clearValRange = sheet.getRange("A5:G10000");
+        clearValRange.dataValidation.clear();
+
+        if (activeRowCount > 0) {
+          var statusRange = sheet.getRange("A5:A" + newLastRowIndex);
+          statusRange.dataValidation.rule = {
+            list: {
+              inCellDropDown: true,
+              source: "ACTIVE,COMPLETE,CANCELLED,NOT ACTIVE"
+            }
+          };
+          
+          var poRange = sheet.getRange("B5:B" + newLastRowIndex);
+          poRange.dataValidation.rule = {
+            list: {
+              inCellDropDown: true,
+              source: "PO Done,PO Pending,N/A"
+            }
+          };
+          await context.sync();
+        }
+
         if (newLastRowIndex < 10000) {
-          var clearBelowRange = sheet.getRange("A" + (newLastRowIndex + 1) + ":F10000");
+          var clearBelowRange = sheet.getRange("A" + (newLastRowIndex + 1) + ":G10000");
           clearBelowRange.clear(Excel.ClearApplyTo.all);
           await context.sync();
         }
@@ -982,6 +1018,9 @@ async function sortSubscriptions() {
         usedRange.format.autofitColumns();
         await context.sync();
       }
+
+      // Automatically sort PAYMENT STATUS sheet if it exists
+      await sortPaymentStatusDirect(context);
     });
   } catch (err) {
     showError("Sorting failed: " + err.message);
@@ -994,10 +1033,11 @@ async function formatSheetColorsDirect(sheet, values) {
   var colorRenewal = '#bbf7d0';    // Soft Green
   var colorComplete = '#bfdbfe';   // Soft Blue
   var colorCancelled = '#fecaca';  // Soft Red
+  var colorNotActive = '#e2e8f0';  // Soft Grey
   var colorDefault = '#ffffff';    // White
 
   var startRow = currentListType === 'monthly' ? 4 : 5;
-  var colLetter = currentListType === 'monthly' ? "L" : "F";
+  var colLetter = currentListType === 'monthly' ? "L" : "G";
 
   for (var i = 0; i < values.length; i++) {
     var status = currentListType === 'monthly'
@@ -1014,6 +1054,8 @@ async function formatSheetColorsDirect(sheet, values) {
       rowColor = colorComplete;
     } else if (status === 'cancelled' || status.indexOf('cancel') !== -1) {
       rowColor = colorCancelled;
+    } else if (status === 'not active' || status.indexOf('not active') !== -1) {
+      rowColor = colorNotActive;
     }
 
     var rowNum = i + startRow;
@@ -1031,16 +1073,132 @@ async function formatSheetColorsDirect(sheet, values) {
     var dataRange = sheet.getRange("A3:L" + lastRow);
     dataRange.format.horizontalAlignment = "Center";
   } else {
-    var headerRange = sheet.getRange("A4:F4");
+    var headerRange = sheet.getRange("A4:G4");
     headerRange.format.fill.color = "#FFC000";
     headerRange.format.font.bold = true;
     
     var lastRow = values.length >= 1 ? values.length + 4 : 4;
-    var dataRange = sheet.getRange("A4:F" + lastRow);
+    var dataRange = sheet.getRange("A4:G" + lastRow);
     dataRange.format.horizontalAlignment = "Center";
   }
 
   await sheet.context.sync();
+}
+
+// In-Memory Custom Sort for PAYMENT STATUS sheet
+async function sortPaymentStatusDirect(context) {
+  var paymentSheet = context.workbook.worksheets.getItemOrNullObject("PAYMENT STATUS");
+  paymentSheet.load("nullObject");
+  await context.sync();
+
+  if (!paymentSheet.isNullObject) {
+    var paymentRangeUsed = paymentSheet.getUsedRange();
+    var paymentLastRowRange = paymentRangeUsed.getLastRow();
+    paymentLastRowRange.load("rowIndex");
+    await context.sync();
+
+    var paymentLastRowIndex = paymentLastRowRange.rowIndex + 1;
+    var paymentStartRow = 8;
+    if (paymentLastRowIndex >= paymentStartRow) {
+      var paymentRange = paymentSheet.getRange("B" + paymentStartRow + ":G" + paymentLastRowIndex);
+      paymentRange.load(["values", "text"]);
+      await context.sync();
+
+      var paymentValues = paymentRange.values;
+      var paymentText = paymentRange.text;
+      
+      var paymentRecords = [];
+      for (var i = 0; i < paymentValues.length; i++) {
+        var rowVal = paymentValues[i];
+        var rowText = paymentText[i];
+        var statusStr = String(rowVal[0] || '').trim();
+        var euStr = String(rowVal[3] || '').trim();
+        if (statusStr === "" && euStr === "") {
+          continue;
+        }
+        paymentRecords.push({
+          values: rowVal,
+          text: rowText
+        });
+      }
+
+      var paymentStatusWeights = {
+        'not paid': 1,
+        'paid': 2,
+        'cancelled': 3
+      };
+
+      paymentRecords.sort(function(a, b) {
+        var statusA = String(a.values[0] || '').trim().toLowerCase();
+        var statusB = String(b.values[0] || '').trim().toLowerCase();
+        var weightA = paymentStatusWeights[statusA] || 4;
+        var weightB = paymentStatusWeights[statusB] || 4;
+        if (weightA !== weightB) return weightA - weightB;
+
+        var getTime = function(val) {
+          if (typeof val === 'number') return val;
+          if (!val) return 0;
+          var parsed = new Date(val).getTime();
+          return isNaN(parsed) ? 0 : parsed;
+        };
+
+        var dateA = getTime(a.values[1]);
+        var dateB = getTime(b.values[1]);
+        if (dateA !== dateB) {
+          if (dateA === 0) return 1;
+          if (dateB === 0) return -1;
+          return dateA - dateB;
+        }
+
+        var euA = String(a.values[3] || '').trim().toLowerCase();
+        var euB = String(b.values[3] || '').trim().toLowerCase();
+        return euA.localeCompare(euB);
+      });
+
+      var activePaymentRowCount = paymentRecords.length;
+      var newPaymentLastRowIndex = activePaymentRowCount >= 1 ? (paymentStartRow - 1) + activePaymentRowCount : (paymentStartRow - 1);
+
+      // Clear validations in Columns B to G below header
+      var clearValRange = paymentSheet.getRange("B" + paymentStartRow + ":G10000");
+      clearValRange.dataValidation.clear();
+
+      if (newPaymentLastRowIndex < 10000) {
+        var clearBelowRange = paymentSheet.getRange("B" + (newPaymentLastRowIndex + 1) + ":G10000");
+        clearBelowRange.clear(Excel.ClearApplyTo.all);
+        await context.sync();
+      }
+
+      if (activePaymentRowCount > 0) {
+        var writeRange = paymentSheet.getRange("B" + paymentStartRow + ":G" + newPaymentLastRowIndex);
+        
+        var formats = [];
+        var valuesToWrite = [];
+        for (var i = 0; i < paymentRecords.length; i++) {
+          formats.push(["@", "[$-809]dddd\\,d\\ mmmm\\ yyyy;@", "General", "@", "@", "@"]);
+          valuesToWrite.push(paymentRecords[i].values);
+        }
+        writeRange.numberFormat = formats;
+        writeRange.values = valuesToWrite;
+        
+        var statusRange = paymentSheet.getRange("B" + paymentStartRow + ":B" + newPaymentLastRowIndex);
+        statusRange.dataValidation.rule = {
+          list: {
+            inCellDropDown: true,
+            source: "NOT PAID,PAID,CANCELLED"
+          }
+        };
+        await context.sync();
+
+        var alignLastRow = Math.max(7, newPaymentLastRowIndex);
+        var alignRange = paymentSheet.getRange("B7:G" + alignLastRow);
+        alignRange.format.horizontalAlignment = "Center";
+        
+        var usedRange = paymentSheet.getUsedRange();
+        usedRange.format.autofitColumns();
+        await context.sync();
+      }
+    }
+  }
 }
 
 // Trigger row formatting manually (now standardizes, sorts, and colors the sheet)
@@ -1124,6 +1282,7 @@ function setStatusFilter(status) {
   else if (status === 'renewal') targetSelector = '.pill.status-renewal';
   else if (status === 'complete') targetSelector = '.pill.status-completed';
   else if (status === 'cancelled') targetSelector = '.pill.status-cancelled';
+  else if (status === 'not active') targetSelector = '.pill.status-not-active';
   
   var targetPill = document.querySelector(targetSelector);
   if (targetPill) {
@@ -1313,7 +1472,7 @@ async function generateMonthlySheet() {
       var annualValues = [];
       var annualText = [];
       if (annualLastRow >= 5) {
-        var rangeA = annualSheet.getRange("A5:F" + annualLastRow);
+        var rangeA = annualSheet.getRange("A5:G" + annualLastRow);
         rangeA.load(["values", "text"]);
         await context.sync();
         annualValues = rangeA.values;
@@ -1377,18 +1536,18 @@ async function generateMonthlySheet() {
       // Process Annual Master (Filter by End Date month name)
       for (var i = 0; i < annualValues.length; i++) {
         var row = annualValues[i];
-        if (!row[3] && !row[5]) continue;
+        if (!row[4] && !row[6]) continue;
         
-        var endDateVal = row[2];
+        var endDateVal = row[3];
         if (isDateInMonth(endDateVal, selectedMonth)) {
           filteredActive.push({
-            license: String(row[5] || '').trim(),
+            license: String(row[6] || '').trim(),
             billing: "Annual",
             endDate: endDateVal,
             status: String(row[0] || '').trim(),
             so: "",
-            fa: String(row[4] || '').trim(),
-            poStatus: ""
+            fa: String(row[5] || '').trim(),
+            poStatus: String(row[1] || '').trim()
           });
         }
       }
@@ -1495,9 +1654,9 @@ async function generateMonthlySheet() {
         var stLower = rec.status.toLowerCase();
         if (stLower === 'new') {
           statusMapped = "PENDING";
-        } else if (stLower === 'renewal') {
-          statusMapped = rec.poStatus.toLowerCase() === 'po pending' ? "PENDING" : "RENEWED";
-        } else if (stLower === 'cancelled') {
+        } else if (stLower === 'renewal' || stLower === 'active') {
+          statusMapped = (rec.poStatus && rec.poStatus.toLowerCase() === 'po pending') ? "PENDING" : "RENEWED";
+        } else if (stLower === 'cancelled' || stLower === 'not active') {
           statusMapped = "DONE";
         }
 
@@ -1680,6 +1839,8 @@ function parseStatusFieldJS(rawStatus, endDateVal) {
     status = 'Complete';
   } else if (statusStr.indexOf('cancel') !== -1) {
     status = 'Cancelled';
+  } else if (statusStr.indexOf('not active') !== -1) {
+    status = 'Not Active';
   } else {
     status = 'Complete';
   }
