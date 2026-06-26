@@ -786,11 +786,90 @@ async function sortSubscriptions() {
         activeRowCount = values.length;
         newLastRowIndex = activeRowCount >= 1 ? 3 + activeRowCount : 3;
       } else {
-        // Annual Master
-        var range = sheet.getRange("A" + startRow + ":G" + lastRowIndex);
-        range.load("values");
+        // Annual Master - Check headers to auto-restructure
+        var headerRange = sheet.getRange("A4:G4");
+        headerRange.load("values");
         await context.sync();
-        values = range.values;
+
+        var headerValues = headerRange.values[0];
+        var colBHeader = String(headerValues[1] || '').trim().toUpperCase();
+        
+        var isAlready7Column = (colBHeader === "PO STATUS");
+        var isOld5Column = (colBHeader === "PERIOD");
+
+        if (!isAlready7Column) {
+          var oldValues;
+          var oldText;
+          if (isOld5Column) {
+            var oldRange = sheet.getRange("A5:E" + lastRowIndex);
+            oldRange.load(["values", "text"]);
+            await context.sync();
+            oldValues = oldRange.values;
+            oldText = oldRange.text;
+          } else {
+            // Old 6 Column (STATUS, START DATE, END DATE, EU, FA/SO, SUBSCRIPTION)
+            var oldRange = sheet.getRange("A5:F" + lastRowIndex);
+            oldRange.load(["values", "text"]);
+            await context.sync();
+            oldValues = oldRange.values;
+            oldText = oldRange.text;
+          }
+
+          var restructuredValues = [];
+          for (var i = 0; i < oldValues.length; i++) {
+            var status = String(oldValues[i][0] || '').trim();
+            var poStatus = "N/A";
+            var startDate = "", endDate = "";
+            var eu = "", fa_so = "", sub = "";
+
+            if (isOld5Column) {
+              var periodStr = String(oldValues[i][1] || '').trim();
+              var parsedPeriod = parsePeriodFieldJS(periodStr);
+              startDate = parsedPeriod.startDate;
+              endDate = parsedPeriod.endDate;
+              eu = String(oldValues[i][2] || '').trim();
+              fa_so = String(oldValues[i][3] || '').trim();
+              sub = String(oldValues[i][4] || '').trim();
+            } else {
+              startDate = parseExcelDate(oldValues[i][1], oldText[i][1]);
+              endDate = parseExcelDate(oldValues[i][2], oldText[i][2]);
+              eu = String(oldValues[i][3] || '').trim();
+              fa_so = String(oldValues[i][4] || '').trim();
+              sub = String(oldValues[i][5] || '').trim();
+            }
+
+            restructuredValues.push([
+              status,
+              poStatus,
+              startDate,
+              endDate,
+              eu,
+              fa_so,
+              sub
+            ]);
+          }
+
+          // Clear columns A to G below header
+          var clearRangeData = sheet.getRange("A5:G" + lastRowIndex);
+          clearRangeData.clear(Excel.ClearApplyTo.all);
+          
+          // Clear header contents
+          var clearRangeHeader = sheet.getRange("A4:G4");
+          clearRangeHeader.clear(Excel.ClearApplyTo.contents);
+          await context.sync();
+
+          var newHeaderRange = sheet.getRange("A4:G4");
+          var newHeaders = ["STATUS", "PO STATUS", "START DATE", "END DATE", "EU", "FA/SO", "SUBSCRIPTION"];
+          newHeaderRange.values = [newHeaders];
+          await context.sync();
+
+          values = restructuredValues;
+        } else {
+          var range = sheet.getRange("A" + startRow + ":G" + lastRowIndex);
+          range.load("values");
+          await context.sync();
+          values = range.values;
+        }
 
         values = values.filter(function(row) {
           var eu = String(row[4] || '').trim();
@@ -2012,6 +2091,23 @@ function cleanPeriodValueJS(val) {
   }
 
   return str;
+}
+
+function parsePeriodFieldJS(periodStr) {
+  if (!periodStr) return { startDate: "", endDate: "" };
+  var parts = periodStr.split(/\s{2,}/); // split by 2 or more spaces
+  if (parts.length < 2) {
+    parts = periodStr.split(/\s+-\s+/); // fallback to split by ' - '
+  }
+  if (parts.length < 2) {
+    parts = periodStr.split(/\s+/); // fallback to single spaces
+  }
+  var startStr = parts[0] ? parts[0].trim() : "";
+  var endStr = parts[1] ? parts[1].trim() : "";
+  
+  var startDate = parseDDMMMYY(startStr);
+  var endDate = parseDDMMMYY(endStr);
+  return { startDate: startDate, endDate: endDate };
 }
 
 

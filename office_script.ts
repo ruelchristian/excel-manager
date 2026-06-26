@@ -435,8 +435,73 @@ function sortAndColorAnnual(sheet: ExcelScript.Worksheet) {
   let lastRowIndex = lastRowRange.getRowIndex() + 1;
   if (lastRowIndex < 5) return;
   
-  let range = sheet.getRange("A5:G" + lastRowIndex);
-  let values = range.getValues();
+  // Check headers to auto-restructure
+  let headerRange = sheet.getRange("A4:G4");
+  let headerValues = headerRange.getValues()[0];
+  let colBHeader = String(headerValues[1] || '').trim().toUpperCase();
+  
+  let isAlready7Column = (colBHeader === "PO STATUS");
+  let isOld5Column = (colBHeader === "PERIOD");
+  
+  let values: any[][];
+  
+  if (!isAlready7Column) {
+    let oldValues: any[][];
+    if (isOld5Column) {
+      oldValues = sheet.getRange("A5:E" + lastRowIndex).getValues();
+    } else {
+      // Old 6 Column (STATUS, START DATE, END DATE, EU, FA/SO, SUBSCRIPTION)
+      oldValues = sheet.getRange("A5:F" + lastRowIndex).getValues();
+    }
+
+    let restructuredValues: any[][] = [];
+    for (let i = 0; i < oldValues.length; i++) {
+      let status = String(oldValues[i][0] || '').trim();
+      let poStatus = "N/A";
+      let startDate: any = "", endDate: any = "";
+      let eu = "", fa_so = "", sub = "";
+
+      if (isOld5Column) {
+        let periodStr = String(oldValues[i][1] || '').trim();
+        let parsedPeriod = parsePeriodField(periodStr);
+        startDate = parsedPeriod.startDate;
+        endDate = parsedPeriod.endDate;
+        eu = String(oldValues[i][2] || '').trim();
+        fa_so = String(oldValues[i][3] || '').trim();
+        sub = String(oldValues[i][4] || '').trim();
+      } else {
+        startDate = oldValues[i][1];
+        endDate = oldValues[i][2];
+        eu = String(oldValues[i][3] || '').trim();
+        fa_so = String(oldValues[i][4] || '').trim();
+        sub = String(oldValues[i][5] || '').trim();
+      }
+
+      restructuredValues.push([
+        status,
+        poStatus,
+        startDate,
+        endDate,
+        eu,
+        fa_so,
+        sub
+      ]);
+    }
+
+    // Clear columns A to G below header
+    sheet.getRange("A5:G" + lastRowIndex).clear(ExcelScript.ClearApplyTo.all);
+    
+    // Clear header contents
+    sheet.getRange("A4:G4").clear(ExcelScript.ClearApplyTo.contents);
+
+    // Set new headers
+    let newHeaders = ["STATUS", "PO STATUS", "START DATE", "END DATE", "EU", "FA/SO", "SUBSCRIPTION"];
+    sheet.getRange("A4:G4").setValues([newHeaders]);
+
+    values = restructuredValues;
+  } else {
+    values = sheet.getRange("A5:G" + lastRowIndex).getValues();
+  }
 
   // Filter out empty rows (where EU Name (index 4) and Subscription (index 6) are both blank)
   values = values.filter(row => {
@@ -741,5 +806,60 @@ function cleanPeriodValue(val: any): string {
   }
 
   return str;
+}
+
+function parsePeriodField(periodStr: string) {
+  if (!periodStr) return { startDate: "", endDate: "" };
+  let parts = periodStr.split(/\s{2,}/); // split by 2 or more spaces
+  if (parts.length < 2) {
+    parts = periodStr.split(/\s+-\s+/); // fallback to split by ' - '
+  }
+  if (parts.length < 2) {
+    parts = periodStr.split(/\s+/); // fallback to single spaces
+  }
+  let startStr = parts[0] ? parts[0].trim() : "";
+  let endStr = parts[1] ? parts[1].trim() : "";
+  
+  let startDate = parseDDMMMYY(startStr);
+  let endDate = parseDDMMMYY(endStr);
+  return { startDate, endDate };
+}
+
+function parseDDMMMYY(str: string): string {
+  if (!str) return "";
+  let clean = String(str).trim();
+  if (!clean) return "";
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(clean)) {
+    return clean;
+  }
+
+  let parts = clean.split('-');
+  if (parts.length === 3) {
+    let day = parseInt(parts[0], 10);
+    let monthName = parts[1].toLowerCase();
+    let yearShort = parseInt(parts[2], 10);
+
+    const months = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
+    let monthIndex = months.indexOf(monthName);
+    if (monthIndex !== -1 && !isNaN(day)) {
+      let year = yearShort < 50 ? 2000 + yearShort : 1900 + yearShort;
+      let mm = String(monthIndex + 1).padStart(2, '0');
+      let dd = String(day).padStart(2, '0');
+      return `${year}-${mm}-${dd}`;
+    }
+  }
+
+  try {
+    let parsed = new Date(clean);
+    if (!isNaN(parsed.getTime())) {
+      let y = parsed.getFullYear();
+      let m = String(parsed.getMonth() + 1).padStart(2, '0');
+      let d = String(parsed.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+  } catch (e) {}
+
+  return clean;
 }
 
